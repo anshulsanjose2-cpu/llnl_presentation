@@ -113,10 +113,15 @@
     .metric .n{ font-size:1.25em; font-weight:700; color:var(--accent);}
     .metric .l{ font-size:.5em; color:var(--muted); text-transform:uppercase; letter-spacing:.08em;}
 
-    .timeline{ display:flex; align-items:center; gap:.35em; margin:.3em 0;}
-    .tnode{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.35em .5em; font-size:.56em; text-align:center; flex:1;}
-    .tnode b{ display:block; color:var(--accent); font-size:1.05em;}
-    .tnode span{ color:var(--muted); font-size:.85em;}
+    .dual-id{ display:flex; align-items:center; gap:.55em; margin:.18em 0 .35em 0;}
+    .did{ border-radius:7px; padding:.28em .75em; font-size:.63em; font-weight:700; letter-spacing:.04em;}
+    .did.se{ background:rgba(100,181,246,.12); border:1.5px solid #64b5f6; color:#90caf9;}
+    .did.ai{ background:rgba(129,199,132,.12); border:1.5px solid #81c784; color:#a5d6a7;}
+    .did-sep{ font-size:.85em; color:var(--muted); font-weight:300;}
+    .toolkit{ display:flex; gap:.55em; margin:.3em 0;}
+    .tnode{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.4em .6em; font-size:.56em; text-align:center; flex:1;}
+    .tnode b{ display:block; color:var(--accent); font-size:1.05em; margin-bottom:.2em;}
+    .tnode span{ color:var(--muted); font-size:.85em; line-height:1.4;}
 
     .quote{ border-left:3px solid var(--accent); padding:.2em 0 .2em .8em; color:#fff; font-size:.68em; font-style:italic; margin:.3em 0;}
     .footer-tag{ position:absolute; bottom:10px; left:22px; font-size:10px; color:var(--muted); letter-spacing:.05em;}
@@ -144,6 +149,9 @@
     <p class="sub" style="font-size:.78em; color:#fff; letter-spacing:.02em;">
       <b>Anshul Sharma</b>
     </p>
+    <p class="sub" style="font-size:.6em; color:var(--muted); letter-spacing:.04em; margin-top:.5em;">
+      June 10, 2026
+    </p>
   </div>
   <aside class="notes">
     Open with energy and calm. ~15s. Title card only — your bio is the next slide, so don't read credentials here.
@@ -155,18 +163,20 @@
 <!-- ========================= SLIDE 1: INTRO ========================= -->
 <section>
   <p class="kicker">1 &middot; Introduction</p>
-  <h2>Anshul Sharma &mdash; from systems depth to GenAI architecture</h2>
-  <p class="sub" style="margin:.05em 0 .15em 0; font-size:.64em;"><b style="color:#fff;">Staff Software Engineer / Technical Lead</b> &middot; M.S. Software Engineering &middot; 13 years in production systems</p>
-  <p class="sub" style="margin:0 0 .4em 0; font-size:.62em; color:var(--accent2);">Author of <i>RAG in Production</i> &nbsp;&middot;&nbsp; Inventor of the <b style="color:#fff;">ILEI Architecture</b> (USPTO Provisional 63/076,477)</p>
+  <h2>Anshul Sharma</h2>
+  <div class="dual-id">
+    <span class="did se">Software Engineering</span>
+    <span class="did-sep">&middot;</span>
+    <span class="did ai">AI / GenAI Architecture</span>
+  </div>
+  <p class="sub" style="margin:.05em 0 .15em 0; font-size:.64em;"><b style="color:#fff;">Staff Software Engineer / Technical Lead</b> &middot; M.S. Software Engineering &middot; 13 years of industry experience</p>
+  <p class="sub" style="margin:0 0 .4em 0; font-size:.62em; color:var(--accent2);">Author of <i>RAG in Production</i> &nbsp;&middot;&nbsp; Inventor of the <b style="color:#fff;">ILEI Architecture for LLMs</b> (USPTO Provisional 63/076,477)</p>
 
-  <div class="timeline">
-    <div class="tnode fragment fade-right"><b>Distributed Systems</b><span>scale, reliability, failure modes</span></div>
-    <span class="arrow fragment fade-in">→</span>
-    <div class="tnode fragment fade-right"><b>Productivity Apps</b><span>large-scale user-facing products</span></div>
-    <span class="arrow fragment fade-in">→</span>
-    <div class="tnode fragment fade-right"><b>Agentic Systems</b><span>tool use, orchestration, control</span></div>
-    <span class="arrow fragment fade-in">→</span>
-    <div class="tnode fragment fade-right"><b>RAG / GenAI</b><span>retrieval, evaluation, guardrails</span></div>
+  <div class="toolkit">
+    <div class="tnode fragment fade-up"><b>Distributed Systems</b><span>scale &middot; reliability &middot; failure modes</span></div>
+    <div class="tnode fragment fade-up"><b>Productivity Apps</b><span>product sense &middot; UX at scale &middot; fast iteration</span></div>
+    <div class="tnode fragment fade-up"><b>Agentic Systems</b><span>tool use &middot; orchestration &middot; control loops</span></div>
+    <div class="tnode fragment fade-up"><b>RAG / GenAI</b><span>retrieval &middot; evaluation &middot; guardrails</span></div>
   </div>
 
   <div class="grid2" style="margin-top:.5em;">
@@ -188,10 +198,11 @@
     </div>
   </div>
   <aside class="notes">
-    ~90 seconds. KEY MOVE: don't list jobs — assert a trajectory + a thesis.
-    "Take away from this slide: a trajectory, not a job list. I came to AI from distributed systems and data
-    infrastructure — so I don't see a model, I see a distributed system with a probabilistic component in the
-    critical path. That framing changes every decision.
+    ~90 seconds. KEY MOVE: show breadth of toolkit, not a chronology.
+    "Take away from this slide: these aren't stages I passed through — they're tools I reach for simultaneously.
+    Distributed systems instincts inform every architecture decision I make in GenAI. Product experience keeps me
+    grounded in what actually ships. Agentic systems work taught me to contain non-determinism. RAG and evaluation
+    are where that all comes together.
     My operating principle: I treat the LLM as the least reliable component and architect around containing and
     measuring that uncertainty. At this stage I lead through architecture, defining measurable 'good', and getting
     data owners, security and domain experts aligned BEFORE we build. In an environment where a confidently wrong
@@ -223,7 +234,7 @@
       </div>
       <div class="grid2" style="margin-top:.5em;">
         <div>
-          <div class="fail"><span class="x">&#10007;</span><span class="t"><b>Fixed chunking</b> severs tables, code, and claims from their caveats</span></div>
+          <div class="fail"><span class="x">&#10007;</span><span class="t"><b>Fixed chunking</b> splits at arbitrary boundaries &mdash; tables mid-row, code mid-block, conclusions cut from their caveats</span></div>
           <div class="fail"><span class="x">&#10007;</span><span class="t"><b>Pure vector search</b> misses exact terms &mdash; part numbers, acronyms</span></div>
           <div class="fail"><span class="x">&#10007;</span><span class="t"><b>No re-ranking</b> &mdash; right doc buried below noise</span></div>
         </div>
@@ -313,7 +324,7 @@
       <ul>
         <li><b>Hybrid search:</b> dense vectors <i>+</i> sparse BM25 &mdash; pure semantic quietly fails on part numbers, acronyms, exact terms</li>
         <li><b>Re-ranking</b> fixes ordering &mdash; consistently beats a bigger, costlier model</li>
-        <li><b>Structure-aware chunking</b> &mdash; don't sever tables, code, or a claim from its caveat</li>
+        <li><b>Structure-aware chunking</b> &mdash; tables, code blocks, and conclusions stay whole</li>
         <li class="warn">When it hallucinates, my first question is "show me the retrieved context" &mdash; not "upgrade the model"</li>
       </ul>
     </div>
@@ -352,27 +363,29 @@
     <!-- FRONT: the use case + the three-source challenge -->
     <div class="flipface front">
       <h2 class="faceh">Unified knowledge assistant &mdash; <span class="accent">Wiki &middot; Slack &middot; Jira</span></h2>
-      <p class="sub" style="margin:.05em 0 .5em 0; font-size:.62em;">Engineers lost hours hunting answers fragmented across three systems &mdash; tribal knowledge locked in old threads &amp; tickets. One grounded, access-aware assistant over all three.</p>
+      <p class="sub" style="margin:.05em 0 .12em 0; font-size:.62em;">Engineers lost hours hunting answers fragmented across three systems.</p>
+      <p class="sub" style="margin:0 0 .4em 0; font-size:.62em;">Solution: one grounded assistant &mdash; but each source fails differently and needed its own ingestion strategy.</p>
 
+      <p class="kicker" style="margin:.1em 0 .3em 0; font-size:.48em; letter-spacing:.12em;">Three sources &middot; Three different failure modes</p>
       <div class="grid3" style="margin-bottom:.4em;">
         <div class="card" style="border-top:3px solid var(--accent);">
           <h3>Wiki / Docs</h3>
-          <p><b>Challenge:</b> staleness, deep nesting, mixed HTML/MD</p>
-          <p><b>Handling:</b> section-aware chunking &middot; recency decay on stale pages &middot; canonical-URL dedup</p>
+          <p><b>Challenge:</b> goes stale, deeply nested</p>
+          <p><b>Fix:</b> recency decay &middot; section-aware chunking</p>
         </div>
         <div class="card" style="border-top:3px solid #b39ddb;">
           <h3>Slack <span class="muted">(public channels)</span></h3>
-          <p><b>Challenge:</b> conversational noise, threads, no ground truth</p>
-          <p><b>Handling:</b> thread reconstruction &middot; resolve @mentions/links &middot; <b>public-only ACL filter</b> &middot; Q&amp;A-pair extraction</p>
+          <p><b>Challenge:</b> conversational noise, no ground truth</p>
+          <p><b>Fix:</b> thread reconstruction &middot; <b>public-only ACL filter</b></p>
         </div>
         <div class="card" style="border-top:3px solid var(--accent2);">
           <h3>Jira Tickets</h3>
-          <p><b>Challenge:</b> structured fields + freeform comments</p>
-          <p><b>Handling:</b> field-aware parsing &middot; weight resolved/accepted answers &middot; link-graph context</p>
+          <p><b>Challenge:</b> structured fields mixed with freeform comments</p>
+          <p><b>Fix:</b> field-aware parsing &middot; weight resolved answers</p>
         </div>
       </div>
 
-      <div class="verdict" style="color:var(--accent); border-color:#2a4a5c;">The hard part was never the LLM &mdash; it&rsquo;s that three sources fail differently, then have to converge into one governed, access-aware index.</div>
+      <div class="verdict" style="color:var(--accent); border-color:#2a4a5c;">The hard part wasn&rsquo;t the LLM &mdash; it was that each source breaks differently, and they all had to converge into one access-controlled index.</div>
       <div class="fliphint">press &rarr; for the full production architecture</div>
     </div>
 
@@ -542,8 +555,7 @@
 <!-- ========================= SLIDE 4b: CASE STUDY — IMPACT ========================= -->
 <section>
   <p class="kicker">3 &middot; Most recent enterprise data + AI project &mdash; impact</p>
-  <h2>What it changed &mdash; and what I owned</h2>
-
+  <p class="kicker" style="font-size:.48em; letter-spacing:.12em; margin:.1em 0 .25em 0;">Impact</p>
   <div class="metrics" style="margin-bottom:.5em;">
     <div class="metric fragment fade-up"><div class="n">&darr;80%</div><div class="l">Search time</div></div>
     <div class="metric fragment fade-up"><div class="n">30,000+</div><div class="l">Man-hours saved / year</div></div>
@@ -551,21 +563,21 @@
     <div class="metric fragment fade-up"><div class="n">3 &rarr; 1</div><div class="l">Systems to search</div></div>
   </div>
 
+  <p class="kicker" style="font-size:.48em; letter-spacing:.12em; margin:.1em 0 .25em 0;">What I learned</p>
   <div class="grid2">
     <div class="fragment fade-right">
-      <h3>Architecture decisions I owned</h3>
       <ul>
-        <li>Split <b>knowledge vs. serving plane</b>; <b>ACL enforced at ingestion + retrieval</b> (public-only Slack)</li>
-        <li><b>Per-source chunking &amp; re-ranking</b> over a one-size pipeline</li>
-        <li>Built an <b>eval harness with SMEs</b> as a CI gate &mdash; nothing shipped without it</li>
-        <li>Met engineers <b>in Slack</b>; every answer carries source deep links</li>
+        <li>Per-source ingestion strategy matters more than the LLM choice &mdash; <b>each source breaks differently</b></li>
+        <li><b>Hybrid retrieval + re-ranking</b> beat upgrading the model every time</li>
+        <li>An <b>eval harness built with SMEs</b> is the only way to ship with confidence</li>
+        <li>Meet users where they are &mdash; <b>Slack-native answers with deep links</b> drove adoption</li>
       </ul>
     </div>
     <div class="fragment fade-left">
-      <h3>Hard tradeoff</h3>
+      <h3>Tradeoff I&rsquo;d make again</h3>
       <p class="sub" style="font-size:.64em;">Chose <b class="accent">precision over coverage</b> &mdash; tuned to <b>refuse-over-guess</b>, so a confident wrong answer was near-zero in eval. We accepted more "not enough information" responses to protect trust in the early rollout.</p>
-      <h3 style="margin-top:.5em;">Leadership</h3>
-      <p class="sub" style="font-size:.64em;">Aligned <b>security, data owners &amp; SMEs</b> on access policy before build; the eval gate changed how the team shipped &mdash; from "looks good" to <b>measured</b>.</p>
+      <h3 style="margin-top:.5em;">What changed the team</h3>
+      <p class="sub" style="font-size:.64em;">Aligned <b>security, data owners &amp; SMEs</b> on access policy before build; the eval gate moved the team from "looks good" to <b>measured</b>.</p>
     </div>
   </div>
   <aside class="notes">
@@ -588,12 +600,12 @@
 
   <table class="tools">
     <tr><th>Layer</th><th>What I use / evaluate</th><th>How I decide</th></tr>
-    <tr class="fragment fade-in"><td><b>Models</b></td><td>Claude (Opus/Sonnet/Haiku), open-weight (Llama, Mistral) for in-boundary/self-host</td><td>Capability per $ &amp; latency; can it run inside the security boundary?</td></tr>
+    <tr class="fragment fade-in"><td><b>Models</b></td><td>Claude (Opus/Sonnet/Haiku), OpenAI (GPT-4o, GPT-5.x), open-weight (Llama, Mistral) for in-boundary/self-host</td><td>Capability per $ &amp; latency; can it run inside the security boundary?</td></tr>
     <tr class="fragment fade-in"><td><b>Orchestration</b></td><td>LangChain / LlamaIndex for speed; <b>thin custom layer</b> when control matters</td><td>Frameworks to prototype; own the critical path in production</td></tr>
-    <tr class="fragment fade-in"><td><b>Retrieval / store</b></td><td>pgvector, FAISS, Milvus/Qdrant; BM25/Elastic for hybrid</td><td>Scale, filtering on ACL metadata, ops burden</td></tr>
+    <tr class="fragment fade-in"><td><b>Retrieval / store</b></td><td>pgvector, Milvus/Qdrant; BM25/Elastic for hybrid; Azure AI Search</td><td>Scale, filtering on ACL metadata, ops burden</td></tr>
     <tr class="fragment fade-in"><td><b>Evaluation</b></td><td>RAGAS-style metrics, custom harnesses, LLM-as-judge (calibrated)</td><td>Must gate CI; measure retrieval &amp; generation separately</td></tr>
-    <tr class="fragment fade-in"><td><b>Guardrails</b></td><td>Structured output / schema validation, input &amp; output filters, citation enforcement</td><td>Refuse-over-guess; every claim traceable</td></tr>
-    <tr class="fragment fade-in"><td><b>Ops</b></td><td>Tracing (OpenTelemetry / LangSmith-style), prompt &amp; index versioning, caching</td><td>Observability and reproducibility are non-negotiable</td></tr>
+    <tr class="fragment fade-in"><td><b>Guardrails</b></td><td>Structured output / schema validation, input &amp; output filters, citation enforcement; Llama Guard, Presidio</td><td>Refuse-over-guess; every claim traceable</td></tr>
+    <tr class="fragment fade-in"><td><b>Ops</b></td><td>Tracing (OpenTelemetry / LangSmith-style), prompt &amp; index versioning, caching; self-hosted Langfuse</td><td>Observability and reproducibility are non-negotiable</td></tr>
   </table>
 
   <div class="quote fragment fade-up" style="font-size:.72em;">"I adopt frameworks to move fast, but I <span class="accent">own the critical path</span>. In a deterministic-outcomes environment, I won't hand reliability to a black box I can't trace or test."</div>
@@ -608,24 +620,15 @@
 </section>
 
 <!-- ========================= SLIDE 6: CLOSE ========================= -->
-<section data-background-gradient="linear-gradient(135deg,#0b1620 0%,#101d2b 60%,#101f18 100%)">
-  <p class="kicker">Close</p>
-  <h2>Why this maps to the Lab</h2>
-  <div class="grid2">
-    <div>
-      <ul>
-        <li class="fragment fade-up"><b>Deterministic outcomes:</b> evaluation as a gate; refuse-over-guess by design</li>
-        <li class="fragment fade-up"><b>Data governance:</b> ACLs, lineage, PII handling travel with the data &mdash; in-boundary by default</li>
-        <li class="fragment fade-up"><b>Rigorous evaluation:</b> faithfulness &amp; context precision measured continuously</li>
-        <li class="fragment fade-up"><b>Robust architecture:</b> two-plane design, owned critical path, full observability</li>
-        <li class="fragment fade-up"><b>Multi-disciplinary:</b> I align security, data owners &amp; domain experts as part of the architecture</li>
-      </ul>
-    </div>
-    <div class="card fragment fade-left">
-      <h3 style="color:var(--accent2);">What I bring at the lead/architect level</h3>
-      <p style="font-size:.72em; color:#fff;">Not "I can build a RAG pipeline" &mdash; but <b class="accent">"I can make an LLM system the Lab can defend, audit, and trust at scale,"</b> and bring the org along to do it.</p>
-      <p class="note" style="margin-top:.8em;">Thank you. I'd love to dig into any of these.</p>
-    </div>
+<section data-background-gradient="linear-gradient(135deg,#0b1620 0%,#101d2b 60%,#101f18 100%)" style="text-align:center;">
+  <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:500px; max-width:820px; margin:0 auto;">
+    <p class="kicker" style="margin-bottom:1.2em;">Close</p>
+    <p style="font-size:1.1em; color:#fff; line-height:1.5; font-style:italic;">
+The goal shouldn&rsquo;t be a working demo &mdash;
+      <b class="accent">it should be an LLM system the Lab can defend, audit, and trust at scale.</b>
+    </p>
+    <div style="width:48px; height:3px; background:var(--accent); border-radius:2px; margin:1.6em 0;"></div>
+    <p class="sub" style="font-size:.72em; color:var(--muted);">Thank you. I&rsquo;d love to dig into any of these.</p>
   </div>
   <aside class="notes">
     ~45–60s. Don't claim a level — demonstrate it, then let them conclude. Mirror their four priorities back
