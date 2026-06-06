@@ -130,9 +130,41 @@
     table.tools th{ text-align:left; color:var(--accent); border-bottom:1px solid var(--line); padding:.3em .4em; font-size:.9em;}
     table.tools td{ padding:.28em .4em; border-bottom:1px solid #22303d; color:var(--muted); vertical-align:top;}
     table.tools td b{ color:var(--ink);}
+
+    /* content lock screen */
+    #content-lock{ position:fixed; inset:0; z-index:9000; display:none;
+      background:linear-gradient(135deg,#0a1119 0%,#0e1a27 55%,#13101c 100%);
+      align-items:center; justify-content:center; flex-direction:column;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+      transition:opacity .8s ease; }
+    #lock-inner{ text-align:center; max-width:700px; padding:2em; }
+    #lock-inner .kicker{ color:var(--accent); font-size:.7em; letter-spacing:.18em;
+      text-transform:uppercase; font-weight:600; margin-bottom:.8em; }
+    #lock-inner h1{ font-size:1.9em; font-weight:700; color:#fff; line-height:1.1;
+      letter-spacing:-.01em; margin-bottom:.5em; }
+    #lock-message{ color:var(--muted); font-size:.78em; letter-spacing:.03em; margin-bottom:2em; }
+    #countdown{ display:flex; gap:1.2em; justify-content:center; margin-top:.5em; }
+    .cd-tile{ background:#16202b; border:1px solid #33485c; border-radius:12px;
+      padding:.9em 1.2em; min-width:82px; text-align:center; }
+    .cd-tile span{ display:block; font-size:2.2em; font-weight:700; color:var(--accent); line-height:1; }
+    .cd-tile label{ display:block; font-size:.55em; color:var(--muted);
+      text-transform:uppercase; letter-spacing:.1em; margin-top:.4em; }
   </style>
 </head>
 <body>
+<div id="content-lock">
+  <div id="lock-inner">
+    <p class="kicker">Panel Interview &middot; AI Solutions Engineer &middot; LLNL</p>
+    <h1>Production-Grade RAG &amp; LLM Systems</h1>
+    <p id="lock-message">Presentation goes live at 9:00 AM Pacific &middot; Wednesday, June 10, 2026</p>
+    <div id="countdown">
+      <div class="cd-tile"><span id="cd-days">--</span><label>Days</label></div>
+      <div class="cd-tile"><span id="cd-hours">--</span><label>Hours</label></div>
+      <div class="cd-tile"><span id="cd-mins">--</span><label>Minutes</label></div>
+      <div class="cd-tile"><span id="cd-secs">--</span><label>Seconds</label></div>
+    </div>
+  </div>
+</div>
 <div id="draft-banner"><span class="dot">&#9679;</span> <span id="draft-banner-text">WORK IN PROGRESS</span></div>
 <div class="reveal">
 <div class="slides">
@@ -689,6 +721,36 @@ The goal shouldn&rsquo;t be a working demo &mdash;
     function cardFor(frag){ return cards[frag.getAttribute('data-card') || 'arch-card']; }
     Reveal.on('fragmentshown',  function(e){ if(e.fragment.classList.contains('flip-trigger')){ var c = cardFor(e.fragment); if(c && c.state !== 'back')  flip(c, true);  } });
     Reveal.on('fragmenthidden', function(e){ if(e.fragment.classList.contains('flip-trigger')){ var c = cardFor(e.fragment); if(c && c.state !== 'front') flip(c, false); } });
+  })();
+
+  // Content lock — hides the deck behind a countdown until showAtUTC.
+  (function(){
+    var cfg = (window.PRESENTATION_CONFIG && window.PRESENTATION_CONFIG.contentLock) || {};
+    var lock = document.getElementById('content-lock');
+    if(!lock) return;
+    if(!cfg.enabled){ lock.remove(); return; }
+    var cutoff = cfg.showAtUTC ? Date.parse(cfg.showAtUTC) : null;
+    if(!cutoff || isNaN(cutoff) || Date.now() >= cutoff){ lock.remove(); return; }
+    lock.style.display = 'flex';
+    function pad(n){ return String(n).padStart(2,'0'); }
+    function tick(){
+      var rem = cutoff - Date.now();
+      if(rem <= 0){
+        lock.style.opacity = '0';
+        setTimeout(function(){ lock.remove(); }, 800);
+        clearInterval(timer); return;
+      }
+      var d = Math.floor(rem / 86400000);
+      var h = Math.floor((rem % 86400000) / 3600000);
+      var m = Math.floor((rem % 3600000) / 60000);
+      var s = Math.floor((rem % 60000) / 1000);
+      document.getElementById('cd-days').textContent  = pad(d);
+      document.getElementById('cd-hours').textContent = pad(h);
+      document.getElementById('cd-mins').textContent  = pad(m);
+      document.getElementById('cd-secs').textContent  = pad(s);
+    }
+    tick();
+    var timer = setInterval(tick, 1000);
   })();
 
   // Draft banner — configured in config.js (enabled / text / hideAtUTC).
