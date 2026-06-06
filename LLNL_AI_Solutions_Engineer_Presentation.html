@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Solutions Engineer — LLNL Panel</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" id="theme">
+
+  <style>
+    :root{
+      --accent:#4fc3f7;       /* cyan  */
+      --accent2:#80cbc4;      /* teal  */
+      --warn:#ffb74d;         /* amber */
+      --danger:#ef5350;       /* red   */
+      --ink:#e8eef3;
+      --muted:#9fb3c8;
+      --panel:#16202b;
+      --panel2:#1f2c3a;
+      --line:#33485c;
+    }
+    .reveal{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; color:var(--ink);}
+    .reveal h1,.reveal h2,.reveal h3{ font-weight:700; letter-spacing:-.01em; text-transform:none;}
+    .reveal h1{ font-size:1.8em; line-height:1.05;}
+    .reveal h2{ font-size:1.15em; color:#fff; margin-bottom:.15em;}
+    .reveal h3{ font-size:.92em; color:var(--accent);}
+    .reveal section{ text-align:left; padding-bottom:30px;}
+    .reveal .slide-number{ font-size:14px; color:var(--muted);}
+
+    .kicker{ color:var(--accent); font-size:.5em; letter-spacing:.18em; text-transform:uppercase; margin:0 0 .25em 0; font-weight:600;}
+    .sub{ color:var(--muted); font-size:.6em; line-height:1.35;}
+    .reveal ul{ margin-left:1.0em; margin-bottom:.2em;}
+    .reveal li{ margin:.22em 0; font-size:.68em; line-height:1.3;}
+    .reveal li b, .reveal li strong{ color:#fff;}
+    .accent{ color:var(--accent);}
+    .teal{ color:var(--accent2);}
+    .warn{ color:var(--warn);}
+    .danger{ color:var(--danger);}
+    .muted{ color:var(--muted);}
+
+    /* layout helpers */
+    .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:.8em; align-items:start;}
+    .grid3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:.7em;}
+    .card{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:.55em .7em;}
+    .card h3{ margin:.1em 0 .3em 0; font-size:.74em;}
+    .card p, .card li{ font-size:.6em; color:var(--muted); line-height:1.28; margin:.18em 0;}
+    .pill{ display:inline-block; background:var(--panel2); border:1px solid var(--line); border-radius:999px; padding:.18em .6em; font-size:.55em; color:var(--ink); margin:.15em .2em 0 0;}
+
+    /* architecture diagram */
+    .plane{ border-radius:12px; padding:.38em .6em; margin:.26em 0; border:1px solid var(--line);}
+    .plane.kp{ background:linear-gradient(180deg,#13202b,#16252f); border-color:#2a4a5c;}
+    .plane.sp{ background:linear-gradient(180deg,#1a1622,#231a2e); border-color:#4a3a5c;}
+    .plane.cc{ background:linear-gradient(180deg,#10211c,#13261f); border-color:#2a5c45;}
+    .plane .lbl{ font-size:.5em; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-bottom:.26em; font-weight:600;}
+    .plane.kp .lbl{ color:var(--accent);}
+    .plane.sp .lbl{ color:#b39ddb;}
+    .plane.cc .lbl{ color:var(--accent2);}
+    .flow{ display:flex; align-items:center; flex-wrap:wrap; gap:.3em;}
+    .node{ background:#0d161e; border:1px solid var(--line); border-radius:8px; padding:.32em .55em; font-size:.6em; color:var(--ink); white-space:nowrap;}
+    .node.hot{ border-color:var(--accent); box-shadow:0 0 0 1px rgba(79,195,247,.25) inset;}
+    .node.guard{ border-color:var(--warn); color:#fff;}
+    .node.bad{ border-color:var(--danger); opacity:.92;}
+    .node.naive{ background:#1a1416; border-color:#5c3a3f;}
+    .fail{ display:flex; align-items:flex-start; gap:.5em; background:#1c1417; border:1px solid #5c3a3f; border-radius:8px; padding:.4em .6em; margin:.3em 0;}
+    .fail .x{ color:var(--danger); font-weight:700; font-size:.8em; flex-shrink:0;}
+    .fail .t{ font-size:.62em; color:var(--ink); line-height:1.3;}
+    .fail .t b{ color:#fff;}
+    .verdict{ text-align:center; font-size:.8em; color:var(--warn); font-style:italic; margin-top:.5em; padding:.35em; border-top:1px dashed #5c3a3f; border-bottom:1px dashed #5c3a3f;}
+
+    /* flip card — two-phase: faces sit at transform:none when at rest (crisp text) */
+    .flipwrap{ position:relative; height:600px; margin-top:.25em;}
+    .flipcard{ position:relative; width:100%; height:100%; perspective:2600px;}
+    .flipface{ position:absolute; inset:0; }
+    .flipface.back{ display:none; }
+    .flipface.back .plane{ margin:.18em 0; }
+    .fliphint{ position:absolute; bottom:2px; right:6px; font-size:.5em; color:var(--muted); letter-spacing:.05em;}
+    .faceh{ font-size:1.0em; color:#fff; font-weight:700; margin:.05em 0 .2em 0;}
+    .faceh .accent{ color:var(--accent);}
+    .arrow{ color:var(--muted); font-size:.7em;}
+    .note{ font-size:.5em; color:var(--muted); margin-top:.3em; font-style:italic;}
+
+    /* metric row */
+    .metrics{ display:flex; gap:.6em; margin-top:.3em;}
+    .metric{ flex:1; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.5em .6em; text-align:center;}
+    .metric .n{ font-size:1.25em; font-weight:700; color:var(--accent);}
+    .metric .l{ font-size:.5em; color:var(--muted); text-transform:uppercase; letter-spacing:.08em;}
+
+    .timeline{ display:flex; align-items:center; gap:.35em; margin:.45em 0;}
+    .tnode{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.35em .5em; font-size:.56em; text-align:center; flex:1;}
+    .tnode b{ display:block; color:var(--accent); font-size:1.05em;}
+    .tnode span{ color:var(--muted); font-size:.85em;}
+
+    .quote{ border-left:3px solid var(--accent); padding:.25em 0 .25em .8em; color:#fff; font-size:.72em; font-style:italic; margin:.45em 0;}
+    .footer-tag{ position:absolute; bottom:10px; left:22px; font-size:10px; color:var(--muted); letter-spacing:.05em;}
+    .twocol{ column-count:2; column-gap:1.4em;}
+    table.tools{ width:100%; border-collapse:collapse; font-size:.6em;}
+    table.tools th{ text-align:left; color:var(--accent); border-bottom:1px solid var(--line); padding:.3em .4em; font-size:.9em;}
+    table.tools td{ padding:.28em .4em; border-bottom:1px solid #22303d; color:var(--muted); vertical-align:top;}
+    table.tools td b{ color:var(--ink);}
+  </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ========================= TITLE ========================= -->
+<section data-background-gradient="linear-gradient(135deg,#0a1119 0%,#0e1a27 55%,#13101c 100%)" style="text-align:center;">
+  <div style="display:flex; flex-direction:column; justify-content:center; height:660px; align-items:center;">
+    <p class="kicker" style="margin-bottom:1.0em;">Panel Interview &middot; AI Solutions Engineer &middot; LLNL</p>
+    <h1 style="font-size:2.3em; max-width:18em;">Production-Grade RAG &amp; LLM Systems</h1>
+    <h2 style="color:var(--accent2); font-weight:400; font-size:1.0em; margin-top:.35em; letter-spacing:.01em;">
+      Architecting for deterministic outcomes, governance &amp; trust
+    </h2>
+    <div style="width:64px; height:3px; background:var(--accent); border-radius:2px; margin:1.6em 0;"></div>
+    <p class="sub" style="font-size:.78em; color:#fff; letter-spacing:.02em;">
+      <b>Anshul Sharma</b>
+    </p>
+  </div>
+  <aside class="notes">
+    Open with energy and calm. ~15s. Title card only — your bio is the next slide, so don't read credentials here.
+    "Thank you for the time. I'm Anshul. I'm going to walk you through how I think about building LLM systems an
+    organization can actually depend on — covering the four areas you asked about, with room for questions." Advance.
+  </aside>
+</section>
+
+<!-- ========================= SLIDE 1: INTRO ========================= -->
+<section>
+  <p class="kicker">1 &middot; Introduction</p>
+  <h2>Anshul Sharma &mdash; from systems depth to GenAI architecture</h2>
+  <p class="sub" style="margin:.05em 0 .15em 0; font-size:.64em;"><b style="color:#fff;">Staff Software Engineer / Technical Lead</b> &middot; M.S. Software Engineering &middot; 13 years in production systems</p>
+  <p class="sub" style="margin:0 0 .4em 0; font-size:.62em; color:var(--accent2);">Author of <i>RAG in Production</i> &nbsp;&middot;&nbsp; Inventor of the <b style="color:#fff;">ILEI Architecture</b> (USPTO Provisional 63/076,477)</p>
+
+  <div class="timeline">
+    <div class="tnode fragment fade-right"><b>Distributed Systems</b><span>scale, reliability, failure modes</span></div>
+    <span class="arrow fragment fade-in">→</span>
+    <div class="tnode fragment fade-right"><b>Productivity Apps</b><span>large-scale user-facing products</span></div>
+    <span class="arrow fragment fade-in">→</span>
+    <div class="tnode fragment fade-right"><b>Agentic Systems</b><span>tool use, orchestration, control</span></div>
+    <span class="arrow fragment fade-in">→</span>
+    <div class="tnode fragment fade-right"><b>RAG / GenAI</b><span>retrieval, evaluation, guardrails</span></div>
+  </div>
+
+  <div class="grid2" style="margin-top:.5em;">
+    <div class="fragment fade-up">
+      <h3>What I actually do at this level</h3>
+      <ul>
+        <li>Set <b>system architecture</b> &amp; define "good" in measurable terms</li>
+        <li>Align <b>data owners, security, and domain experts</b> before we build</li>
+        <li>Lead through <b>evaluation discipline</b>, not just code output</li>
+        <li>Own the hard tradeoffs: latency vs. accuracy, cost vs. control</li>
+      </ul>
+    </div>
+    <div class="card fragment fade-up">
+      <h3 style="color:var(--warn);">Operating principle</h3>
+      <p style="font-size:.72em; color:#fff; font-style:italic;">
+        "Treat the LLM as the <b style="color:var(--warn);">least reliable component</b> in the
+        system &mdash; and engineer everything around containing and measuring that uncertainty."
+      </p>
+    </div>
+  </div>
+  <aside class="notes">
+    ~90 seconds. KEY MOVE: don't list jobs — assert a trajectory + a thesis.
+    "Take away from this slide: a trajectory, not a job list. I came to AI from distributed systems and data
+    infrastructure — so I don't see a model, I see a distributed system with a probabilistic component in the
+    critical path. That framing changes every decision.
+    My operating principle: I treat the LLM as the least reliable component and architect around containing and
+    measuring that uncertainty. At this stage I lead through architecture, defining measurable 'good', and getting
+    data owners, security and domain experts aligned BEFORE we build. In an environment where a confidently wrong
+    answer has real cost, that discipline is the whole game."
+  </aside>
+</section>
+
+<!-- ========================= SLIDE 2: NAIVE → PRODUCTION (flip) ========================= -->
+<section>
+  <p class="kicker">2 &middot; What a RAG/LLM implementation looks like</p>
+
+  <div class="flipwrap">
+   <div class="flipcard" id="arch-card">
+
+    <!-- FRONT: naive -->
+    <div class="flipface front">
+      <h2 class="faceh">Everyone starts here &mdash; the <span class="danger">naive</span> RAG</h2>
+      <div class="plane" style="background:#160f11; border-color:#5c3a3f; margin-top:.3em;">
+        <div class="lbl" style="color:var(--danger);">The demo pipeline &mdash; one straight line</div>
+        <div class="flow">
+          <span class="node naive">Documents</span><span class="arrow">→</span>
+          <span class="node naive">Fixed-size chunk</span><span class="arrow">→</span>
+          <span class="node naive">Embed</span><span class="arrow">→</span>
+          <span class="node naive">Vector DB</span><span class="arrow">→</span>
+          <span class="node naive">Top-k retrieve</span><span class="arrow">→</span>
+          <span class="node naive">LLM</span><span class="arrow">→</span>
+          <span class="node naive">Answer</span>
+        </div>
+      </div>
+      <div class="grid2" style="margin-top:.5em;">
+        <div>
+          <div class="fail"><span class="x">&#10007;</span><span class="t"><b>Fixed chunking</b> severs tables, code, and claims from their caveats</span></div>
+          <div class="fail"><span class="x">&#10007;</span><span class="t"><b>Pure vector search</b> misses exact terms &mdash; part numbers, acronyms</span></div>
+          <div class="fail"><span class="x">&#10007;</span><span class="t"><b>No re-ranking</b> &mdash; right doc buried below noise</span></div>
+        </div>
+        <div>
+          <div class="fail"><span class="x">&#10007;</span><span class="t"><b>No access control</b> &mdash; retrieves chunks the user can't see</span></div>
+          <div class="fail"><span class="x">&#10007;</span><span class="t"><b>No evaluation</b> &mdash; hallucinations ship silently</span></div>
+          <div class="fail"><span class="x">&#10007;</span><span class="t"><b>No guardrails / citations</b> &mdash; confident, unsupported answers</span></div>
+        </div>
+      </div>
+      <div class="verdict">Works in a 20-minute demo. Fails the moment it meets real data, real users, and real consequences.</div>
+      <div class="fliphint">press &rarr; to productionize</div>
+    </div>
+
+    <!-- BACK: production -->
+    <div class="flipface back">
+      <h2 class="faceh">What <span class="accent">production</span> actually requires &mdash; three planes</h2>
+      <div class="plane kp" style="margin-top:.25em;">
+        <div class="lbl">Knowledge Plane &mdash; offline, governed, versioned, reproducible</div>
+        <div class="flow">
+          <span class="node">Sources<br><span style="font-size:.78em;opacity:.7;">docs &middot; DBs &middot; APIs</span></span><span class="arrow">→</span>
+          <span class="node">Ingest / ETL<br><span style="font-size:.78em;opacity:.7;">parse &middot; clean &middot; dedupe</span></span><span class="arrow">→</span>
+          <span class="node hot">Structure-aware chunking<br><span style="font-size:.78em;opacity:.7;">tables &middot; code &middot; sections</span></span><span class="arrow">→</span>
+          <span class="node">Embedding<br><span style="font-size:.78em;opacity:.7;">model-versioned</span></span><span class="arrow">→</span>
+          <span class="node">Vector + Metadata store<br><span style="font-size:.78em;opacity:.7;">indexed &middot; filterable</span></span>
+        </div>
+        <div class="note">Each chunk carries: source &middot; section &middot; version &middot; <b class="accent">access-control identity</b> &middot; PII tags &middot; lineage</div>
+      </div>
+      <div class="plane sp">
+        <div class="lbl">Serving Plane &mdash; online, low-latency</div>
+        <div class="flow">
+          <span class="node">Query</span><span class="arrow">→</span>
+          <span class="node guard">Input guardrails<br><span style="font-size:.78em;opacity:.7;">injection &middot; PII &middot; scope</span></span><span class="arrow">→</span>
+          <span class="node">Rewrite / expand<br><span style="font-size:.78em;opacity:.7;">+ embed</span></span><span class="arrow">→</span>
+          <span class="node hot">Hybrid retrieve<br><span style="font-size:.78em;opacity:.7;">dense + BM25 &middot; ACL filter</span></span><span class="arrow">→</span>
+          <span class="node hot">Re-rank<br><span style="font-size:.78em;opacity:.7;">cross-encoder</span></span><span class="arrow">→</span>
+          <span class="node">Context assemble<br><span style="font-size:.78em;opacity:.7;">dedupe &middot; token budget</span></span><span class="arrow">→</span>
+          <span class="node">LLM<br><span style="font-size:.78em;opacity:.7;">grounded prompt</span></span><span class="arrow">→</span>
+          <span class="node guard">Output guardrails<br><span style="font-size:.78em;opacity:.7;">faithfulness &middot; citations &middot; schema</span></span><span class="arrow">→</span>
+          <span class="node">Answer + citations</span>
+        </div>
+        <div class="note">ACLs enforced <b class="accent">at retrieval time</b> &middot; <b class="warn">refuse-over-guess</b> on low-confidence retrieval &middot; latency budget per stage</div>
+      </div>
+      <div class="plane cc">
+        <div class="lbl">Control Plane &mdash; trust, governance &amp; operations, spanning both planes</div>
+        <div class="flow">
+          <span class="node">Evaluation harness<br><span style="font-size:.78em;opacity:.7;">faithfulness &middot; precision &middot; deploy gate</span></span>
+          <span class="node">Observability / tracing<br><span style="font-size:.78em;opacity:.7;">spans &middot; latency &middot; cost</span></span>
+          <span class="node">Access &amp; governance<br><span style="font-size:.78em;opacity:.7;">identity &middot; ACLs &middot; audit log</span></span>
+          <span class="node">Caching &amp; cost controls<br><span style="font-size:.78em;opacity:.7;">semantic cache &middot; budgets</span></span>
+        </div>
+      </div>
+    </div>
+
+   </div>
+  </div>
+
+  <span class="fragment flip-trigger" style="position:absolute; opacity:0; pointer-events:none;">flip</span>
+  <aside class="notes">
+    THE ANCHOR. This slide FLIPS: front = naive RAG, then press the arrow/space to flip in place to the 3-plane
+    production architecture. Press left/back-arrow to flip back. ~4 min total across both faces.
+
+    [FRONT — ~1.5 min, be generous about the naive version]
+    "If you ask most people what a RAG implementation is, this is it — chunk, embed, vector DB, retrieve top-k, hand
+    it to the model. Honestly, a fine way to prove the concept in an afternoon. I've built this; it demos beautifully.
+    But the moment it meets real data, real users, and real consequences, it breaks in specific, predictable ways."
+    Walk 2-3 red failures — emphasize access control and silent hallucinations for the Lab. Then:
+    "So here's how I actually build it." → PRESS ARROW TO FLIP.
+
+    [BACK — ~2.5 min, the anchor]
+    "Same problem, productionized. The key decision: I split it into three planes. An offline KNOWLEDGE plane —
+    governed, versioned, reproducible. An online SERVING plane — latency and validation, guardrails on both ends.
+    And a CONTROL plane spanning both — evaluation as a deploy gate, tracing, access/governance with audit, cost
+    controls. Notice every red X from a second ago is now a named capability: chunking, hybrid retrieval, re-ranking,
+    ACLs enforced at retrieval time, evaluation, guardrails. That's the difference between a demo and a system the
+    Lab can defend."
+  </aside>
+</section>
+
+<!-- ========================= SLIDE 3: RETRIEVAL + EVAL DEPTH ========================= -->
+<section>
+  <p class="kicker">2 &middot; The two decisions that actually determine quality</p>
+  <h2>Retrieval <span class="muted">is</span> the system. The LLM is the last 10%.</h2>
+
+  <div class="grid2">
+    <div class="card fragment fade-right">
+      <h3>Retrieval &mdash; the real lever</h3>
+      <ul>
+        <li><b>Hybrid search:</b> dense vectors <i>+</i> sparse BM25 &mdash; pure semantic quietly fails on part numbers, acronyms, exact terms</li>
+        <li><b>Re-ranking</b> fixes ordering &mdash; consistently beats a bigger, costlier model</li>
+        <li><b>Structure-aware chunking</b> &mdash; don't sever tables, code, or a claim from its caveat</li>
+        <li class="warn">When it hallucinates, my first question is "show me the retrieved context" &mdash; not "upgrade the model"</li>
+      </ul>
+    </div>
+    <div class="card fragment fade-left">
+      <h3 style="color:var(--accent2);">Evaluation &mdash; the deployment gate</h3>
+      <ul>
+        <li><b>Retrieval:</b> context <b>precision</b> &amp; <b>recall</b> &mdash; right evidence, low noise</li>
+        <li><b>Generation:</b> <b class="warn">faithfulness</b> &mdash; is every claim grounded in retrieved context?</li>
+        <li><b>Answer relevance</b> &mdash; did we address the actual question?</li>
+        <li>Curated eval set built <b>with domain experts</b>; run on every change; <b>gate deploys on it like a test suite</b></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="quote fragment fade-up">"A fluent, confident, <span class="danger">unsupported</span> answer is the most dangerous output a RAG system can produce. I'd rather it say <span class="accent">'I don't have enough information'</span> than guess &mdash; refusal is a feature, not a failure."</div>
+  <aside class="notes">
+    ~2.5 min. This is the opinion slide — be confident and concrete.
+    "The biggest lever on quality is not which model — it's whether the right context is in front of it.
+    Hybrid retrieval, because pure semantic search fails on exact tokens that matter in technical/scientific
+    domains. Re-ranking. Structure-aware chunking. I've repeatedly seen better chunking + re-ranking beat a more
+    expensive model.
+    Evaluation: I measure retrieval and generation SEPARATELY. Context precision/recall on retrieval; faithfulness
+    and answer relevance on generation. Faithfulness is the one I obsess over. I build the eval set WITH domain
+    experts, run it on every change, and gate deployments on it. If we can't measure it, we don't ship it.
+    Land the quote line slowly — it directly mirrors the Lab's risk posture."
+  </aside>
+</section>
+
+<!-- ========================= SLIDE 4a: CASE STUDY — ARCHITECTURE ========================= -->
+<section>
+  <p class="kicker">3 &middot; Most recent enterprise data + AI project</p>
+  <h2>Unified knowledge assistant &mdash; <span class="accent">Wiki &middot; Slack &middot; Jira</span></h2>
+  <p class="sub" style="margin:.05em 0 .35em 0; font-size:.62em;">Engineers lost hours hunting answers fragmented across three systems &mdash; tribal knowledge locked in old threads &amp; tickets. One grounded, access-aware assistant over all three.</p>
+
+  <!-- three source lanes, each with source-specific handling -->
+  <div class="grid3" style="margin-bottom:.3em;">
+    <div class="card fragment fade-up" style="border-top:3px solid var(--accent);">
+      <h3>Wiki / Docs</h3>
+      <p><b>Challenge:</b> staleness, deep nesting, mixed HTML/MD</p>
+      <p><b>Handling:</b> section-aware chunking &middot; recency decay on stale pages &middot; canonical-URL dedup</p>
+    </div>
+    <div class="card fragment fade-up" style="border-top:3px solid #b39ddb;">
+      <h3>Slack <span class="muted">(public channels)</span></h3>
+      <p><b>Challenge:</b> conversational noise, threads, no ground truth</p>
+      <p><b>Handling:</b> thread reconstruction &middot; resolve @mentions/links &middot; <b>public-only ACL filter</b> &middot; Q&amp;A-pair extraction</p>
+    </div>
+    <div class="card fragment fade-up" style="border-top:3px solid var(--accent2);">
+      <h3>Jira Tickets</h3>
+      <p><b>Challenge:</b> structured fields + freeform comments</p>
+      <p><b>Handling:</b> field-aware parsing &middot; weight resolved/accepted answers &middot; link-graph context</p>
+    </div>
+  </div>
+
+  <div class="fragment fade-in" style="text-align:center; color:var(--muted); font-size:.7em; margin:.1em 0;">&#9660;&nbsp; normalize &middot; ACL-tag &middot; embed &#9660;</div>
+
+  <div class="plane kp fragment fade-in" style="margin:.15em 0;">
+    <div class="lbl">Knowledge Plane &mdash; unified index</div>
+    <div class="flow">
+      <span class="node">Source connectors<br><span style="font-size:.78em;opacity:.7;">incremental sync</span></span><span class="arrow">→</span>
+      <span class="node hot">Per-source chunking<br><span style="font-size:.78em;opacity:.7;">+ ACL &amp; freshness tags</span></span><span class="arrow">→</span>
+      <span class="node">Embed<br><span style="font-size:.78em;opacity:.7;">cross-source</span></span><span class="arrow">→</span>
+      <span class="node">Vector + metadata store</span>
+    </div>
+  </div>
+  <div class="plane sp fragment fade-in" style="margin:.15em 0;">
+    <div class="lbl">Serving Plane &mdash; delivered as a Slack bot + web UI</div>
+    <div class="flow">
+      <span class="node hot">Hybrid retrieve<br><span style="font-size:.78em;opacity:.7;">+ source-aware re-rank</span></span><span class="arrow">→</span>
+      <span class="node">Grounded LLM</span><span class="arrow">→</span>
+      <span class="node guard">Guardrails<br><span style="font-size:.78em;opacity:.7;">cite source + link</span></span><span class="arrow">→</span>
+      <span class="node">Answer w/ deep links to Wiki/Slack/Jira</span>
+    </div>
+  </div>
+  <aside class="notes">
+    ~2 min on architecture. The point of this slide: ONE assistant, but each source forced a DIFFERENT engineering
+    problem — that range is the senior signal.
+    "The hardest part wasn't the LLM — it was that these three sources fail differently. Wiki goes stale, so I added
+    recency decay. Slack is conversational with no ground truth, so I reconstructed threads and extracted Q&A pairs,
+    and critically filtered to PUBLIC channels only — access control at ingestion. Jira is half structured fields,
+    half freeform, so I parsed fields and weighted resolved answers. Then they normalize into one unified, ACL-tagged
+    index, and the assistant lives where engineers already are — in Slack — answering with deep links back to the
+    source so every claim is verifiable." Then ADVANCE to impact.
+  </aside>
+</section>
+
+<!-- ========================= SLIDE 4b: CASE STUDY — IMPACT ========================= -->
+<section>
+  <p class="kicker">3 &middot; Most recent enterprise data + AI project &mdash; impact</p>
+  <h2>What it changed &mdash; and what I owned</h2>
+
+  <div class="metrics" style="margin-bottom:.5em;">
+    <div class="metric fragment fade-up"><div class="n">&darr;80%</div><div class="l">Search time</div></div>
+    <div class="metric fragment fade-up"><div class="n">30,000+</div><div class="l">Man-hours saved / year</div></div>
+    <div class="metric fragment fade-up"><div class="n">0.92</div><div class="l">Faithfulness (eval set)</div></div>
+    <div class="metric fragment fade-up"><div class="n">3 &rarr; 1</div><div class="l">Systems to search</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="fragment fade-right">
+      <h3>Architecture decisions I owned</h3>
+      <ul>
+        <li>Split <b>knowledge vs. serving plane</b>; <b>ACL enforced at ingestion + retrieval</b> (public-only Slack)</li>
+        <li><b>Per-source chunking &amp; re-ranking</b> over a one-size pipeline</li>
+        <li>Built an <b>eval harness with SMEs</b> as a CI gate &mdash; nothing shipped without it</li>
+        <li>Met engineers <b>in Slack</b>; every answer carries source deep links</li>
+      </ul>
+    </div>
+    <div class="fragment fade-left">
+      <h3>Hard tradeoff</h3>
+      <p class="sub" style="font-size:.64em;">Chose <b class="accent">precision over coverage</b> &mdash; tuned to <b>refuse-over-guess</b>, so a confident wrong answer was near-zero in eval. We accepted more "not enough information" responses to protect trust in the early rollout.</p>
+      <h3 style="margin-top:.5em;">Leadership</h3>
+      <p class="sub" style="font-size:.64em;">Aligned <b>security, data owners &amp; SMEs</b> on access policy before build; the eval gate changed how the team shipped &mdash; from "looks good" to <b>measured</b>.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    ~2 min. Lead with the metrics, then decisions, then the leadership beat — that last part is the SES.4 signal.
+    "Impact: median time-to-answer dropped from ~15 minutes of hunting to under a minute. We deflected roughly 40%
+    of the repetitive questions in our help channels. On our eval set faithfulness held above 0.9. And engineers went
+    from searching three systems to asking one.
+    The decisions I owned map exactly to the architecture I showed you. The conscious tradeoff: I tuned for precision
+    over coverage — refuse-over-guess — because in the early rollout, one confident wrong answer destroys trust faster
+    than ten honest 'I don't knows'. And the part I'm proudest of isn't the stack: I got security, data owners and SMEs
+    aligned on access policy before we wrote code, and the eval gate moved the team from 'looks good to me' to measured."
+    IMPORTANT: swap in your REAL numbers — a Lab panel may probe them.
+  </aside>
+</section>
+
+<!-- ========================= SLIDE 5: TOOLING ECOSYSTEM ========================= -->
+<section>
+  <p class="kicker">4 &middot; RAG / LLM / AI tooling ecosystem</p>
+  <h2>Opinionated, but loyal to <span class="accent">capabilities</span>, not vendors</h2>
+
+  <table class="tools">
+    <tr><th>Layer</th><th>What I use / evaluate</th><th>How I decide</th></tr>
+    <tr class="fragment fade-in"><td><b>Models</b></td><td>Claude (Opus/Sonnet/Haiku), open-weight (Llama, Mistral) for in-boundary/self-host</td><td>Capability per $ &amp; latency; can it run inside the security boundary?</td></tr>
+    <tr class="fragment fade-in"><td><b>Orchestration</b></td><td>LangChain / LlamaIndex for speed; <b>thin custom layer</b> when control matters</td><td>Frameworks to prototype; own the critical path in production</td></tr>
+    <tr class="fragment fade-in"><td><b>Retrieval / store</b></td><td>pgvector, FAISS, Milvus/Qdrant; BM25/Elastic for hybrid</td><td>Scale, filtering on ACL metadata, ops burden</td></tr>
+    <tr class="fragment fade-in"><td><b>Evaluation</b></td><td>RAGAS-style metrics, custom harnesses, LLM-as-judge (calibrated)</td><td>Must gate CI; measure retrieval &amp; generation separately</td></tr>
+    <tr class="fragment fade-in"><td><b>Guardrails</b></td><td>Structured output / schema validation, input &amp; output filters, citation enforcement</td><td>Refuse-over-guess; every claim traceable</td></tr>
+    <tr class="fragment fade-in"><td><b>Ops</b></td><td>Tracing (OpenTelemetry / LangSmith-style), prompt &amp; index versioning, caching</td><td>Observability and reproducibility are non-negotiable</td></tr>
+  </table>
+
+  <div class="quote fragment fade-up" style="font-size:.72em;">"I adopt frameworks to move fast, but I <span class="accent">own the critical path</span>. In a deterministic-outcomes environment, I won't hand reliability to a black box I can't trace or test."</div>
+  <aside class="notes">
+    ~2.5 min. Show breadth WITHOUT name-dropping for its own sake — pair every tool with a DECISION CRITERION.
+    "I'm opinionated but loyal to capabilities, not vendors. Frameworks like LangChain/LlamaIndex to prototype, but
+    in production I keep a thin custom layer on the critical path so I can trace and test it. On models I weigh
+    capability-per-dollar and latency, AND whether it can run inside the security boundary — which matters enormously
+    here. Evaluation tooling has to gate CI. Guardrails enforce citations and refuse-over-guess.
+    Punchline: I won't hand reliability to a black box I can't trace or test."
+  </aside>
+</section>
+
+<!-- ========================= SLIDE 6: CLOSE ========================= -->
+<section data-background-gradient="linear-gradient(135deg,#0b1620 0%,#101d2b 60%,#101f18 100%)">
+  <p class="kicker">Close</p>
+  <h2>Why this maps to the Lab</h2>
+  <div class="grid2">
+    <div>
+      <ul>
+        <li class="fragment fade-up"><b>Deterministic outcomes:</b> evaluation as a gate; refuse-over-guess by design</li>
+        <li class="fragment fade-up"><b>Data governance:</b> ACLs, lineage, PII handling travel with the data &mdash; in-boundary by default</li>
+        <li class="fragment fade-up"><b>Rigorous evaluation:</b> faithfulness &amp; context precision measured continuously</li>
+        <li class="fragment fade-up"><b>Robust architecture:</b> two-plane design, owned critical path, full observability</li>
+        <li class="fragment fade-up"><b>Multi-disciplinary:</b> I align security, data owners &amp; domain experts as part of the architecture</li>
+      </ul>
+    </div>
+    <div class="card fragment fade-left">
+      <h3 style="color:var(--accent2);">What I bring at the lead/architect level</h3>
+      <p style="font-size:.72em; color:#fff;">Not "I can build a RAG pipeline" &mdash; but <b class="accent">"I can make an LLM system the Lab can defend, audit, and trust at scale,"</b> and bring the org along to do it.</p>
+      <p class="note" style="margin-top:.8em;">Thank you. I'd love to dig into any of these.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    ~45–60s. Don't claim a level — demonstrate it, then let them conclude. Mirror their four priorities back
+    explicitly (deterministic / governance / evaluation / architecture) so the mapping is unmistakable.
+    Final line, slow and confident: "Not 'I can build a RAG pipeline' — but 'I can make an LLM system the Lab can
+    defend, audit, and trust at scale,' and bring the org along to do it." Then open for questions.
+  </aside>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script>
+  Reveal.initialize({
+    hash:true,
+    center:false,
+    slideNumber:'c/t',
+    transition:'slide',
+    transitionSpeed:'fast',
+    width:1280, height:740, margin:0.035,
+    plugins:[ RevealNotes, RevealHighlight ]
+  });
+
+  // Slide 2: two-phase flip — keeps text crisp (no transform at rest) and avoids backface bleed.
+  (function(){
+    var card = document.getElementById('arch-card');
+    if(!card) return;
+    var front = card.querySelector('.flipface.front');
+    var back  = card.querySelector('.flipface.back');
+    var DUR = 280, state = 'front', busy = false;
+    function flip(toBack){
+      if(busy) return; busy = true;
+      var out = toBack ? front : back;
+      var inc = toBack ? back : front;
+      out.style.transition = 'transform ' + DUR + 'ms ease-in';
+      out.style.transform  = 'rotateY(' + (toBack ? -90 : 90) + 'deg)';
+      setTimeout(function(){
+        out.style.display = 'none'; out.style.transition = ''; out.style.transform = '';
+        inc.style.transition = 'none';
+        inc.style.display = 'block';
+        inc.style.transform = 'rotateY(' + (toBack ? 90 : -90) + 'deg)';
+        void inc.offsetWidth; // force reflow
+        inc.style.transition = 'transform ' + DUR + 'ms ease-out';
+        inc.style.transform  = 'rotateY(0deg)';
+        setTimeout(function(){ inc.style.transition = ''; inc.style.transform = ''; busy = false; }, DUR + 30);
+      }, DUR);
+      state = toBack ? 'back' : 'front';
+    }
+    Reveal.on('fragmentshown',  function(e){ if(e.fragment.classList.contains('flip-trigger') && state !== 'back')  flip(true);  });
+    Reveal.on('fragmenthidden', function(e){ if(e.fragment.classList.contains('flip-trigger') && state !== 'front') flip(false); });
+  })();
+</script>
+</body>
+</html>
