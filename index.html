@@ -128,7 +128,7 @@
   </style>
 </head>
 <body>
-<div id="draft-banner"><span class="dot">&#9679;</span> DRAFT &mdash; WORK IN PROGRESS &middot; NOT FINAL &nbsp; <span class="lite">subject to change before the panel</span></div>
+<div id="draft-banner"><span class="dot">&#9679;</span> <span id="draft-banner-text">WORK IN PROGRESS</span></div>
 <div class="reveal">
 <div class="slides">
 
@@ -638,6 +638,7 @@
 </div>
 </div>
 
+<script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
@@ -687,15 +688,23 @@
     Reveal.on('fragmenthidden', function(e){ if(e.fragment.classList.contains('flip-trigger')){ var c = cardFor(e.fragment); if(c && c.state !== 'front') flip(c, false); } });
   })();
 
-  // Draft banner: visible until 6:00 AM Pacific (PDT, UTC-7) on Wed Jun 10, 2026 == 13:00 UTC.
+  // Draft banner — configured in config.js (enabled / text / hideAtUTC).
   (function(){
-    var cutoff = Date.UTC(2026, 5, 10, 13, 0, 0); // month is 0-indexed (5 = June)
+    var cfg = (window.PRESENTATION_CONFIG && window.PRESENTATION_CONFIG.draftBanner) || {};
     var banner = document.getElementById('draft-banner');
     if(!banner) return;
-    if(Date.now() >= cutoff){ banner.remove(); return; }
+    if(!cfg.enabled){ banner.remove(); return; }
+    var label = document.getElementById('draft-banner-text');
+    if(label && cfg.text != null) label.textContent = cfg.text;
+    if(cfg.hideAtUTC){
+      var cutoff = Date.parse(cfg.hideAtUTC);
+      if(!isNaN(cutoff)){
+        if(Date.now() >= cutoff){ banner.remove(); return; }
+        var ms = cutoff - Date.now();
+        if(ms <= 2147483647){ setTimeout(function(){ banner.remove(); }, ms); } // live-remove if left open past cutoff
+      }
+    }
     banner.style.display = 'block';
-    var ms = cutoff - Date.now();
-    if(ms <= 2147483647){ setTimeout(function(){ banner.remove(); }, ms); } // live-remove if left open past cutoff
   })();
 </script>
 </body>
