@@ -25,7 +25,7 @@
     .reveal h1{ font-size:1.8em; line-height:1.05;}
     .reveal h2{ font-size:1.15em; color:#fff; margin-bottom:.15em;}
     .reveal h3{ font-size:.92em; color:var(--accent);}
-    .reveal section{ text-align:left; padding:0 0 8px 0; box-sizing:border-box; overflow-y:auto;}
+    .reveal section{ text-align:left; padding:0 0 8px 0; box-sizing:border-box; outline:none;}
     .reveal .slide-number{ font-size:14px; color:var(--muted);}
 
     .kicker{ color:var(--accent); font-size:.5em; letter-spacing:.18em; text-transform:uppercase; margin:0 0 .25em 0; font-weight:600;}
@@ -68,10 +68,27 @@
     .fail .t b{ color:#fff;}
     .verdict{ text-align:center; font-size:.8em; color:var(--warn); font-style:italic; margin-top:.5em; padding:.35em; border-top:1px dashed #5c3a3f; border-bottom:1px dashed #5c3a3f;}
 
+    /* use-case ingestion lanes (slide 3 flip — detailed architecture) */
+    .lane{ background:linear-gradient(180deg,#0d161e,#0f1a24); border:1px solid var(--line); border-radius:9px; padding:.28em .32em; display:flex; flex-direction:column; gap:.18em;}
+    .lane-h{ font-size:.56em; font-weight:700; color:#fff; border-left:3px solid var(--line); padding-left:.42em; margin-bottom:.04em;}
+    .lane-step{ font-size:.5em; color:var(--muted); background:#0b141c; border:1px solid #22303d; border-radius:6px; padding:.2em .36em; line-height:1.18;}
+    .lane-step.hot{ border-color:var(--accent); color:var(--ink);}
+    .lane-step b{ color:#fff;}
+    .converge{ text-align:center; font-size:.54em; color:var(--muted); margin:.28em 0 .22em 0; letter-spacing:.01em;}
+    .converge b{ color:#fff;}
+    /* scoped tightening so the detailed architecture fits one slide */
+    #usecase-card .flipface.back .faceh{ font-size:.86em; margin:.02em 0 .08em 0;}
+    #usecase-card .flipface.back .plane{ padding:.3em .5em; margin:.16em 0;}
+    #usecase-card .flipface.back .lbl{ margin-bottom:.16em; font-size:.46em;}
+    #usecase-card .flipface.back .flow{ gap:.24em;}
+    #usecase-card .flipface.back .node{ padding:.26em .44em; font-size:.56em;}
+    #usecase-card .flipface.back .note{ margin-top:.16em; font-size:.46em;}
+
     /* flip card — two-phase: faces sit at transform:none when at rest (crisp text) */
-    .flipwrap{ position:relative; height:830px; margin-top:.15em;}
+    .flipwrap{ position:relative; height:880px; margin-top:.12em;}
+    .flipwrap.tall{ height:902px;}
     .flipcard{ position:relative; width:100%; height:100%; perspective:2600px;}
-    .flipface{ position:absolute; inset:0; }
+    .flipface{ position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden; }
     .flipface.back{ display:none; }
     .flipface.back .plane{ margin:.18em 0; }
     .fliphint{ position:absolute; bottom:2px; right:6px; font-size:.5em; color:var(--muted); letter-spacing:.05em;}
@@ -252,7 +269,7 @@
    </div>
   </div>
 
-  <span class="fragment flip-trigger" style="position:absolute; opacity:0; pointer-events:none;">flip</span>
+  <span class="fragment flip-trigger" data-card="arch-card" style="position:absolute; opacity:0; pointer-events:none;">flip</span>
   <aside class="notes">
     THE ANCHOR. This slide FLIPS: front = naive RAG, then press the arrow/space to flip in place to the 3-plane
     production architecture. Press left/back-arrow to flip back. ~4 min total across both faces.
@@ -314,60 +331,200 @@
   </aside>
 </section>
 
-<!-- ========================= SLIDE 4a: CASE STUDY — ARCHITECTURE ========================= -->
+<!-- ========================= SLIDE 4a: CASE STUDY — ARCHITECTURE (FLIP) ========================= -->
 <section>
   <p class="kicker">3 &middot; Most recent enterprise data + AI project</p>
-  <h2>Unified knowledge assistant &mdash; <span class="accent">Wiki &middot; Slack &middot; Jira</span></h2>
-  <p class="sub" style="margin:.05em 0 .35em 0; font-size:.62em;">Engineers lost hours hunting answers fragmented across three systems &mdash; tribal knowledge locked in old threads &amp; tickets. One grounded, access-aware assistant over all three.</p>
 
-  <!-- three source lanes, each with source-specific handling -->
-  <div class="grid3" style="margin-bottom:.3em;">
-    <div class="card fragment fade-up" style="border-top:3px solid var(--accent);">
-      <h3>Wiki / Docs</h3>
-      <p><b>Challenge:</b> staleness, deep nesting, mixed HTML/MD</p>
-      <p><b>Handling:</b> section-aware chunking &middot; recency decay on stale pages &middot; canonical-URL dedup</p>
+  <div class="flipwrap tall">
+   <div class="flipcard" id="usecase-card">
+
+    <!-- FRONT: the use case + the three-source challenge -->
+    <div class="flipface front">
+      <h2 class="faceh">Unified knowledge assistant &mdash; <span class="accent">Wiki &middot; Slack &middot; Jira</span></h2>
+      <p class="sub" style="margin:.05em 0 .5em 0; font-size:.62em;">Engineers lost hours hunting answers fragmented across three systems &mdash; tribal knowledge locked in old threads &amp; tickets. One grounded, access-aware assistant over all three.</p>
+
+      <div class="grid3" style="margin-bottom:.4em;">
+        <div class="card" style="border-top:3px solid var(--accent);">
+          <h3>Wiki / Docs</h3>
+          <p><b>Challenge:</b> staleness, deep nesting, mixed HTML/MD</p>
+          <p><b>Handling:</b> section-aware chunking &middot; recency decay on stale pages &middot; canonical-URL dedup</p>
+        </div>
+        <div class="card" style="border-top:3px solid #b39ddb;">
+          <h3>Slack <span class="muted">(public channels)</span></h3>
+          <p><b>Challenge:</b> conversational noise, threads, no ground truth</p>
+          <p><b>Handling:</b> thread reconstruction &middot; resolve @mentions/links &middot; <b>public-only ACL filter</b> &middot; Q&amp;A-pair extraction</p>
+        </div>
+        <div class="card" style="border-top:3px solid var(--accent2);">
+          <h3>Jira Tickets</h3>
+          <p><b>Challenge:</b> structured fields + freeform comments</p>
+          <p><b>Handling:</b> field-aware parsing &middot; weight resolved/accepted answers &middot; link-graph context</p>
+        </div>
+      </div>
+
+      <div class="verdict" style="color:var(--accent); border-color:#2a4a5c;">The hard part was never the LLM &mdash; it&rsquo;s that three sources fail differently, then have to converge into one governed, access-aware index.</div>
+      <div class="fliphint">press &rarr; for the full production architecture</div>
     </div>
-    <div class="card fragment fade-up" style="border-top:3px solid #b39ddb;">
-      <h3>Slack <span class="muted">(public channels)</span></h3>
-      <p><b>Challenge:</b> conversational noise, threads, no ground truth</p>
-      <p><b>Handling:</b> thread reconstruction &middot; resolve @mentions/links &middot; <b>public-only ACL filter</b> &middot; Q&amp;A-pair extraction</p>
+
+    <!-- BACK: detailed, end-to-end production architecture -->
+    <div class="flipface back">
+      <h2 class="faceh">Production architecture &mdash; <span class="accent">end-to-end</span></h2>
+
+      <svg class="archsvg" viewBox="0 0 1240 836" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;margin-top:.12em;">
+        <defs>
+          <marker id="ah"  markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L7,3 L0,6 Z" fill="#7d93a8"/></marker>
+          <marker id="aha" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L7,3 L0,6 Z" fill="#4fc3f7"/></marker>
+          <marker id="ahw" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L7,3 L0,6 Z" fill="#80cbc4"/></marker>
+          <marker id="ahf" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L7,3 L0,6 Z" fill="#ffb74d"/></marker>
+        </defs>
+        <style>
+          .archsvg text{ font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif; }
+          .archsvg .pl{ font-size:12.5px; font-weight:700; letter-spacing:1.4px; }
+          .archsvg .bx{ fill:#0d161e; stroke:#33485c; stroke-width:1.4; }
+          .archsvg .bx.hot{ stroke:#4fc3f7; stroke-width:1.9; }
+          .archsvg .bx.guard{ stroke:#ffb74d; stroke-width:1.9; }
+          .archsvg .bx.judge{ stroke:#80cbc4; stroke-width:1.9; }
+          .archsvg .bx.key{ stroke:#4fc3f7; stroke-width:1.7; fill:#10202c; }
+          .archsvg .bx.cache{ stroke:#b39ddb; stroke-width:1.9; fill:#150f1d; }
+          .archsvg .t{ fill:#e8eef3; font-size:13px; font-weight:600; text-anchor:middle; }
+          .archsvg .s{ fill:#9fb3c8; font-size:10.5px; text-anchor:middle; }
+          .archsvg .cap{ fill:#8aa0b4; font-size:11.5px; font-style:italic; }
+          .archsvg .tag{ fill:#7d93a8; font-size:10px; font-style:italic; }
+          .archsvg .ln{ stroke:#7d93a8; stroke-width:1.7; fill:none; }
+          .archsvg .lna{ stroke:#4fc3f7; stroke-width:1.9; fill:none; }
+          .archsvg .lnd{ stroke:#80cbc4; stroke-width:1.5; fill:none; stroke-dasharray:6 4; }
+          .archsvg .lnp{ stroke:#b39ddb; stroke-width:1.6; fill:none; stroke-dasharray:6 4; }
+          .archsvg .lnf{ stroke:#ffb74d; stroke-width:1.5; fill:none; stroke-dasharray:6 4; }
+          .archsvg .cyl{ fill:#0e1d28; stroke:#33485c; stroke-width:1.4; }
+          .archsvg .cylp{ fill:#150f1d; stroke:#5a4a73; stroke-width:1.4; }
+        </style>
+
+        <!-- ===== PLANE BANDS ===== -->
+        <rect x="8"  y="24"  width="1224" height="372" rx="14" fill="#13202b" stroke="#2a4a5c"/>
+        <rect x="8"  y="412" width="1224" height="248" rx="14" fill="#1b1622" stroke="#4a3a5c"/>
+        <rect x="8"  y="676" width="1224" height="150" rx="14" fill="#10211c" stroke="#2a5c45"/>
+        <text class="pl" x="26" y="50"  fill="#4fc3f7">KNOWLEDGE PLANE &#8212; OFFLINE INGESTION &#183; GOVERNED &#183; VERSIONED</text>
+        <text class="pl" x="26" y="436" fill="#b39ddb">SERVING PLANE &#8212; ONLINE, LOW-LATENCY &#183; SLACK BOT + WEB UI</text>
+        <text class="pl" x="26" y="702" fill="#80cbc4">CONTROL PLANE &#8212; TRUST, GOVERNANCE &amp; OPS &#183; SPANS BOTH PLANES</text>
+
+        <!-- ===== KNOWLEDGE PLANE ===== -->
+        <rect class="bx" x="28" y="88"  width="150" height="44" rx="8" style="stroke:#4fc3f7"/><text class="t" x="103" y="114">Wiki / Confluence</text>
+        <rect class="bx" x="28" y="163" width="150" height="44" rx="8" style="stroke:#b39ddb"/><text class="t" x="103" y="189">Slack (public)</text>
+        <rect class="bx" x="28" y="238" width="150" height="44" rx="8" style="stroke:#80cbc4"/><text class="t" x="103" y="264">Jira</text>
+
+        <rect class="bx hot" x="200" y="88"  width="232" height="44" rx="8"/><text class="t" x="316" y="106" style="font-size:12px">Section-aware chunk</text><text class="s" x="316" y="122">recency decay &#183; URL dedup</text>
+        <rect class="bx hot" x="200" y="163" width="232" height="44" rx="8"/><text class="t" x="316" y="181" style="font-size:12px">Public-only ACL gate</text><text class="s" x="316" y="197">thread rebuild &#183; Q&amp;A pairs</text>
+        <rect class="bx hot" x="200" y="238" width="232" height="44" rx="8"/><text class="t" x="316" y="256" style="font-size:12px">Field-aware parse</text><text class="s" x="316" y="272">weight resolved &#183; link-graph</text>
+
+        <rect class="bx key" x="470" y="118" width="170" height="154" rx="10"/>
+        <text class="t" x="555" y="150">Normalize &amp; Tag</text>
+        <text class="s" x="555" y="172">unified doc schema</text>
+        <text class="s" x="555" y="192" fill="#4fc3f7">ACL identity &#183; PII</text>
+        <text class="s" x="555" y="212">source &#183; version</text>
+        <text class="s" x="555" y="232">lineage</text>
+
+        <rect class="bx" x="680" y="173" width="112" height="44" rx="8"/><text class="t" x="736" y="193">Chunk</text><text class="s" x="736" y="209">512 tok &#183; overlap</text>
+        <rect class="bx" x="824" y="173" width="146" height="44" rx="8"/><text class="t" x="897" y="191">Embed</text><text class="s" x="897" y="207">model-versioned</text>
+
+        <path class="cyl" d="M999,133 L999,170 A72,9 0 0 0 1143,170 L1143,133 A72,9 0 0 1 999,133 Z"/>
+        <ellipse cx="1071" cy="133" rx="72" ry="9" fill="#17222e" stroke="#33485c" stroke-width="1.4"/>
+        <text class="t" x="1071" y="156">Vector store</text><text class="s" x="1071" y="171" style="font-size:9.5px">HNSW &#183; cosine</text>
+        <path class="cyl" d="M999,223 L999,260 A72,9 0 0 0 1143,260 L1143,223 A72,9 0 0 1 999,223 Z"/>
+        <ellipse cx="1071" cy="223" rx="72" ry="9" fill="#17222e" stroke="#33485c" stroke-width="1.4"/>
+        <text class="t" x="1071" y="246">Metadata store</text>
+        <text class="s" x="1071" y="284">ACL &#183; freshness filterable</text>
+
+        <line class="ln" x1="178" y1="110" x2="196" y2="110" marker-end="url(#ah)"/>
+        <line class="ln" x1="178" y1="185" x2="196" y2="185" marker-end="url(#ah)"/>
+        <line class="ln" x1="178" y1="260" x2="196" y2="260" marker-end="url(#ah)"/>
+        <path class="ln" d="M432,110 C452,110 450,150 466,150" marker-end="url(#ah)"/>
+        <path class="ln" d="M432,185 L466,191" marker-end="url(#ah)"/>
+        <path class="ln" d="M432,260 C452,260 452,232 466,232" marker-end="url(#ah)"/>
+        <line class="lna" x1="640" y1="195" x2="676" y2="195" marker-end="url(#aha)"/>
+        <line class="ln"  x1="792" y1="195" x2="820" y2="195" marker-end="url(#ah)"/>
+        <path class="ln" d="M970,188 C986,188 984,151 995,151" marker-end="url(#ah)"/>
+        <path class="ln" d="M970,202 C986,202 984,241 995,241" marker-end="url(#ah)"/>
+        <text class="cap" x="26" y="375">Incremental scheduler &#183; failed docs &#8594; dead-letter queue &#183; re-index on embedding-model bump</text>
+
+        <!-- ===== SERVING PLANE ===== -->
+        <!-- semantic cache layer (sits in front of retrieval) -->
+        <rect class="bx cache" x="470" y="446" width="200" height="42" rx="8"/><text class="t" x="570" y="464" fill="#d3c3ec">Semantic cache</text><text class="s" x="570" y="479" fill="#b39ddb">embedding-keyed &#183; ANN &#183; TTL</text>
+        <path class="cylp" d="M700,448 L700,478 A40,7 0 0 0 780,478 L780,448 A40,7 0 0 1 700,448 Z"/>
+        <ellipse cx="740" cy="448" rx="40" ry="7" fill="#1d1429" stroke="#5a4a73" stroke-width="1.3"/>
+        <text class="s" x="740" y="468" fill="#b39ddb" style="font-size:10px">cache store</text>
+        <line class="lnp" x1="670" y1="467" x2="698" y2="467" marker-end="url(#ahw)"/>
+
+        <!-- main pipeline -->
+        <rect class="bx"       x="28"   y="512" width="132" height="58" rx="8"/><text class="t" x="94"   y="537">User</text><text class="s" x="94"   y="554">Slack &#183; Web</text>
+        <rect class="bx guard" x="178"  y="512" width="132" height="58" rx="8"/><text class="t" x="244"  y="537">Input guardrails</text><text class="s" x="244"  y="554">injection &#183; PII &#183; scope</text>
+        <rect class="bx"       x="328"  y="512" width="132" height="58" rx="8"/><text class="t" x="394"  y="537">Identity &#8594; ACL</text><text class="s" x="394"  y="554">OIDC/SSO &#8594; groups</text>
+        <rect class="bx hot"   x="478"  y="512" width="132" height="58" rx="8"/><text class="t" x="544"  y="537">Hybrid retrieve</text><text class="s" x="544"  y="554">BM25 + dense kNN</text>
+        <rect class="bx hot"   x="628"  y="512" width="132" height="58" rx="8"/><text class="t" x="694"  y="537">Re-rank</text><text class="s" x="694"  y="554">cross-encoder top-k</text>
+        <rect class="bx"       x="778"  y="512" width="132" height="58" rx="8"/><text class="t" x="844"  y="537">Assemble + LLM</text><text class="s" x="844"  y="554">token-budgeted</text>
+        <rect class="bx guard" x="928"  y="512" width="132" height="58" rx="8"/><text class="t" x="994"  y="537">Output guardrails</text><text class="s" x="994"  y="554">schema &#183; citation</text>
+        <rect class="bx"       x="1078" y="512" width="132" height="58" rx="8"/><text class="t" x="1144" y="537">Answer</text><text class="s" x="1144" y="554">+ deep links</text>
+
+        <line class="ln" x1="160"  y1="541" x2="176"  y2="541" marker-end="url(#ah)"/>
+        <line class="ln" x1="310"  y1="541" x2="326"  y2="541" marker-end="url(#ah)"/>
+        <line class="ln" x1="460"  y1="541" x2="476"  y2="541" marker-end="url(#ah)"/>
+        <line class="ln" x1="610"  y1="541" x2="626"  y2="541" marker-end="url(#ah)"/>
+        <line class="ln" x1="760"  y1="541" x2="776"  y2="541" marker-end="url(#ah)"/>
+        <line class="ln" x1="910"  y1="541" x2="926"  y2="541" marker-end="url(#ah)"/>
+        <line class="ln" x1="1060" y1="541" x2="1076" y2="541" marker-end="url(#ah)"/>
+
+        <!-- cache lookup: query -> cache; miss -> retrieve; hit -> answer (bypass) -->
+        <path class="lnp" d="M394,512 C394,484 450,467 466,467" marker-end="url(#ahw)"/>
+        <path class="lnp" d="M560,488 C560,500 548,502 545,508" marker-end="url(#ahw)"/>
+        <text class="tag" x="566" y="503" fill="#b39ddb">miss</text>
+        <path class="lnp" d="M670,460 C880,440 1140,452 1144,508" marker-end="url(#ahw)"/>
+        <text class="tag" x="892" y="447" fill="#b39ddb">cache hit &#8594; return (bypass)</text>
+
+        <!-- retrieve queries the index (ANN over vector store, ACL filter over metadata) -->
+        <path class="lnd" d="M544,512 C544,420 820,300 1006,288" marker-end="url(#ahw)"/>
+        <text class="cap" x="600" y="410" fill="#80cbc4">queries index &#183; ACL-filtered kNN</text>
+
+        <!-- online LLM-as-judge: scores groundedness; low score -> regenerate / refuse -->
+        <rect class="bx judge" x="784" y="592" width="220" height="46" rx="8"/><text class="t" x="894" y="612" fill="#a7ddd6">LLM-as-judge</text><text class="s" x="894" y="628" fill="#80cbc4">groundedness &#183; faithfulness score</text>
+        <path class="ln"  d="M866,570 C866,580 880,586 888,590" marker-end="url(#ah)"/>
+        <path class="lnd" d="M978,592 C998,584 994,574 994,572" marker-end="url(#ahw)"/>
+        <text class="tag" x="1000" y="588" fill="#80cbc4">score</text>
+        <path class="lnf" d="M820,592 C800,576 808,572 812,570" marker-end="url(#ahf)"/>
+        <text class="tag" x="700" y="612" fill="#ffb74d">low score &#8594; refuse / regenerate</text>
+
+        <text class="cap" x="26" y="650">ACL on every request &#183; guardrails on both ends &#183; refuse-over-guess &#183; per-stage latency budget &#183; streamed tokens</text>
+
+        <!-- ===== CONTROL PLANE ===== -->
+        <rect class="bx" x="28"  y="724" width="278" height="62" rx="8"/><text class="t" x="167"  y="749">Evaluation harness</text><text class="s" x="167"  y="767">offline RAGAS + LLM-judge &#8594; CI gate</text>
+        <rect class="bx" x="330" y="724" width="278" height="62" rx="8"/><text class="t" x="469"  y="749">Observability</text><text class="s" x="469"  y="767">OTel spans &#183; latency &#183; token cost</text>
+        <rect class="bx" x="632" y="724" width="278" height="62" rx="8"/><text class="t" x="771"  y="749">Governance</text><text class="s" x="771"  y="767">ACL enforce &#183; audit log &#183; PII</text>
+        <rect class="bx" x="934" y="724" width="278" height="62" rx="8"/><text class="t" x="1073" y="749">Feedback loop</text><text class="s" x="1073" y="767">&#128077;/&#128078; &#8594; eval-set enrichment</text>
+
+        <!-- eval gates deploys; answer feeds feedback; judge shares calibration with eval harness -->
+        <path class="lnf" d="M167,724 C167,650 300,628 300,572" marker-end="url(#ahf)"/>
+        <text class="cap" x="180" y="690" fill="#ffb74d">CI deploy gate</text>
+        <path class="lnd" d="M1144,570 C1190,650 1073,690 1073,720" marker-end="url(#ahw)"/>
+      </svg>
     </div>
-    <div class="card fragment fade-up" style="border-top:3px solid var(--accent2);">
-      <h3>Jira Tickets</h3>
-      <p><b>Challenge:</b> structured fields + freeform comments</p>
-      <p><b>Handling:</b> field-aware parsing &middot; weight resolved/accepted answers &middot; link-graph context</p>
-    </div>
+
+   </div>
   </div>
 
-  <div class="fragment fade-in" style="text-align:center; color:var(--muted); font-size:.7em; margin:.1em 0;">&#9660;&nbsp; normalize &middot; ACL-tag &middot; embed &#9660;</div>
-
-  <div class="plane kp fragment fade-in" style="margin:.15em 0;">
-    <div class="lbl">Knowledge Plane &mdash; unified index</div>
-    <div class="flow">
-      <span class="node">Source connectors<br><span style="font-size:.78em;opacity:.7;">incremental sync</span></span><span class="arrow">→</span>
-      <span class="node hot">Per-source chunking<br><span style="font-size:.78em;opacity:.7;">+ ACL &amp; freshness tags</span></span><span class="arrow">→</span>
-      <span class="node">Embed<br><span style="font-size:.78em;opacity:.7;">cross-source</span></span><span class="arrow">→</span>
-      <span class="node">Vector + metadata store</span>
-    </div>
-  </div>
-  <div class="plane sp fragment fade-in" style="margin:.15em 0;">
-    <div class="lbl">Serving Plane &mdash; delivered as a Slack bot + web UI</div>
-    <div class="flow">
-      <span class="node hot">Hybrid retrieve<br><span style="font-size:.78em;opacity:.7;">+ source-aware re-rank</span></span><span class="arrow">→</span>
-      <span class="node">Grounded LLM</span><span class="arrow">→</span>
-      <span class="node guard">Guardrails<br><span style="font-size:.78em;opacity:.7;">cite source + link</span></span><span class="arrow">→</span>
-      <span class="node">Answer w/ deep links to Wiki/Slack/Jira</span>
-    </div>
-  </div>
+  <span class="fragment flip-trigger" data-card="usecase-card" style="position:absolute; opacity:0; pointer-events:none;">flip</span>
   <aside class="notes">
-    ~2 min on architecture. The point of this slide: ONE assistant, but each source forced a DIFFERENT engineering
-    problem — that range is the senior signal.
-    "The hardest part wasn't the LLM — it was that these three sources fail differently. Wiki goes stale, so I added
-    recency decay. Slack is conversational with no ground truth, so I reconstructed threads and extracted Q&A pairs,
-    and critically filtered to PUBLIC channels only — access control at ingestion. Jira is half structured fields,
-    half freeform, so I parsed fields and weighted resolved answers. Then they normalize into one unified, ACL-tagged
-    index, and the assistant lives where engineers already are — in Slack — answering with deep links back to the
-    source so every claim is verifiable." Then ADVANCE to impact.
+    ~2.5 min. This slide FLIPS: front = the use case and the three-source challenge; press the arrow/space to flip
+    in place to the full end-to-end production architecture. Press left/back-arrow to flip back.
+
+    [FRONT — ~1 min] The point: ONE assistant, but each source forced a DIFFERENT engineering problem — that range
+    is the senior signal. "The hardest part wasn't the LLM — these three sources fail differently. Wiki goes stale,
+    so recency decay. Slack is conversational with no ground truth, so thread reconstruction + Q&A extraction, and
+    critically PUBLIC channels only — access control at ingestion. Jira is half structured, half freeform, so
+    field-aware parsing and weighting resolved answers." Then: "Here's the whole system." → PRESS ARROW TO FLIP.
+
+    [BACK — ~1.5 min] Walk the three planes. Knowledge plane: three source-specific ingestion lanes converging into
+    one normalized, ACL-tagged, versioned index. Serving plane: identity→ACL on every request, input/output
+    guardrails on both ends, hybrid retrieve + cross-encoder re-rank, grounded LLM, answers with deep links back to
+    source. Control plane: SME-built eval as a CI deploy gate, OTel tracing, governance/audit, and a feedback loop
+    that enriches the eval set. "ACLs enforced at ingestion AND retrieval; nothing ships without passing the eval
+    gate." Then ADVANCE to impact.
   </aside>
 </section>
 
@@ -485,17 +642,21 @@
     plugins:[ RevealNotes, RevealHighlight ]
   });
 
-  // Slide 2: two-phase flip — keeps text crisp (no transform at rest) and avoids backface bleed.
+  // Two-phase flip — keeps text crisp (no transform at rest) and avoids backface bleed.
+  // Supports multiple flip cards; each .flip-trigger fragment names its card via data-card.
   (function(){
-    var card = document.getElementById('arch-card');
-    if(!card) return;
-    var front = card.querySelector('.flipface.front');
-    var back  = card.querySelector('.flipface.back');
-    var DUR = 280, state = 'front', busy = false;
-    function flip(toBack){
-      if(busy) return; busy = true;
-      var out = toBack ? front : back;
-      var inc = toBack ? back : front;
+    var cards = {};
+    document.querySelectorAll('.flipcard').forEach(function(card){
+      var front = card.querySelector('.flipface.front');
+      var back  = card.querySelector('.flipface.back');
+      if(!front || !back) return;
+      cards[card.id] = { front:front, back:back, state:'front', busy:false };
+    });
+    var DUR = 280;
+    function flip(c, toBack){
+      if(!c || c.busy) return; c.busy = true;
+      var out = toBack ? c.front : c.back;
+      var inc = toBack ? c.back : c.front;
       out.style.transition = 'transform ' + DUR + 'ms ease-in';
       out.style.transform  = 'rotateY(' + (toBack ? -90 : 90) + 'deg)';
       setTimeout(function(){
@@ -506,12 +667,13 @@
         void inc.offsetWidth; // force reflow
         inc.style.transition = 'transform ' + DUR + 'ms ease-out';
         inc.style.transform  = 'rotateY(0deg)';
-        setTimeout(function(){ inc.style.transition = ''; inc.style.transform = ''; busy = false; }, DUR + 30);
+        setTimeout(function(){ inc.style.transition = ''; inc.style.transform = ''; c.busy = false; }, DUR + 30);
       }, DUR);
-      state = toBack ? 'back' : 'front';
+      c.state = toBack ? 'back' : 'front';
     }
-    Reveal.on('fragmentshown',  function(e){ if(e.fragment.classList.contains('flip-trigger') && state !== 'back')  flip(true);  });
-    Reveal.on('fragmenthidden', function(e){ if(e.fragment.classList.contains('flip-trigger') && state !== 'front') flip(false); });
+    function cardFor(frag){ return cards[frag.getAttribute('data-card') || 'arch-card']; }
+    Reveal.on('fragmentshown',  function(e){ if(e.fragment.classList.contains('flip-trigger')){ var c = cardFor(e.fragment); if(c && c.state !== 'back')  flip(c, true);  } });
+    Reveal.on('fragmenthidden', function(e){ if(e.fragment.classList.contains('flip-trigger')){ var c = cardFor(e.fragment); if(c && c.state !== 'front') flip(c, false); } });
   })();
 </script>
 </body>
