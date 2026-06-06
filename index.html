@@ -25,7 +25,7 @@
     .reveal h1{ font-size:1.8em; line-height:1.05;}
     .reveal h2{ font-size:1.15em; color:#fff; margin-bottom:.15em;}
     .reveal h3{ font-size:.92em; color:var(--accent);}
-    .reveal section{ text-align:left; padding-bottom:30px;}
+    .reveal section{ text-align:left; padding:0 0 8px 0; box-sizing:border-box; overflow-y:auto;}
     .reveal .slide-number{ font-size:14px; color:var(--muted);}
 
     .kicker{ color:var(--accent); font-size:.5em; letter-spacing:.18em; text-transform:uppercase; margin:0 0 .25em 0; font-weight:600;}
@@ -69,7 +69,7 @@
     .verdict{ text-align:center; font-size:.8em; color:var(--warn); font-style:italic; margin-top:.5em; padding:.35em; border-top:1px dashed #5c3a3f; border-bottom:1px dashed #5c3a3f;}
 
     /* flip card — two-phase: faces sit at transform:none when at rest (crisp text) */
-    .flipwrap{ position:relative; height:600px; margin-top:.25em;}
+    .flipwrap{ position:relative; height:830px; margin-top:.15em;}
     .flipcard{ position:relative; width:100%; height:100%; perspective:2600px;}
     .flipface{ position:absolute; inset:0; }
     .flipface.back{ display:none; }
@@ -81,17 +81,17 @@
     .note{ font-size:.5em; color:var(--muted); margin-top:.3em; font-style:italic;}
 
     /* metric row */
-    .metrics{ display:flex; gap:.6em; margin-top:.3em;}
+    .metrics{ display:flex; gap:.5em; margin-top:.2em;}
     .metric{ flex:1; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.5em .6em; text-align:center;}
     .metric .n{ font-size:1.25em; font-weight:700; color:var(--accent);}
     .metric .l{ font-size:.5em; color:var(--muted); text-transform:uppercase; letter-spacing:.08em;}
 
-    .timeline{ display:flex; align-items:center; gap:.35em; margin:.45em 0;}
+    .timeline{ display:flex; align-items:center; gap:.35em; margin:.3em 0;}
     .tnode{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.35em .5em; font-size:.56em; text-align:center; flex:1;}
     .tnode b{ display:block; color:var(--accent); font-size:1.05em;}
     .tnode span{ color:var(--muted); font-size:.85em;}
 
-    .quote{ border-left:3px solid var(--accent); padding:.25em 0 .25em .8em; color:#fff; font-size:.72em; font-style:italic; margin:.45em 0;}
+    .quote{ border-left:3px solid var(--accent); padding:.2em 0 .2em .8em; color:#fff; font-size:.68em; font-style:italic; margin:.3em 0;}
     .footer-tag{ position:absolute; bottom:10px; left:22px; font-size:10px; color:var(--muted); letter-spacing:.05em;}
     .twocol{ column-count:2; column-gap:1.4em;}
     table.tools{ width:100%; border-collapse:collapse; font-size:.6em;}
@@ -106,7 +106,7 @@
 
 <!-- ========================= TITLE ========================= -->
 <section data-background-gradient="linear-gradient(135deg,#0a1119 0%,#0e1a27 55%,#13101c 100%)" style="text-align:center;">
-  <div style="display:flex; flex-direction:column; justify-content:center; height:660px; align-items:center;">
+  <div style="display:flex; flex-direction:column; justify-content:center; min-height:500px; align-items:center;">
     <p class="kicker" style="margin-bottom:1.0em;">Panel Interview &middot; AI Solutions Engineer &middot; LLNL</p>
     <h1 style="font-size:2.3em; max-width:18em;">Production-Grade RAG &amp; LLM Systems</h1>
     <h2 style="color:var(--accent2); font-weight:400; font-size:1.0em; margin-top:.35em; letter-spacing:.01em;">
@@ -480,7 +480,7 @@
     slideNumber:'c/t',
     transition:'slide',
     transitionSpeed:'fast',
-    width:1280, height:800, margin:0.04,
+    width:1280, height:960, margin:0.03,
     minScale:0.2, maxScale:2.0,
     plugins:[ RevealNotes, RevealHighlight ]
   });
