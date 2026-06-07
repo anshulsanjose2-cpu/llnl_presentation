@@ -131,6 +131,46 @@
     table.tools td{ padding:.28em .4em; border-bottom:1px solid #22303d; color:var(--muted); vertical-align:top;}
     table.tools td b{ color:var(--ink);}
 
+    /* presentation mode buttons */
+    .mode-btns{ display:flex; gap:1em; justify-content:center; margin-top:2em; }
+    .mode-btn{
+      display:inline-flex; align-items:center; gap:.5em;
+      padding:.55em 1.4em; border-radius:8px; font-size:.72em; font-weight:600;
+      letter-spacing:.04em; text-transform:uppercase; cursor:pointer; border:none;
+      text-decoration:none; line-height:1;
+      transition:transform .15s, box-shadow .15s;
+    }
+    .mode-btn:hover{ transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,.4); }
+    .mode-btn.primary{ background:var(--accent); color:#0a1119; }
+    .mode-btn.secondary{ background:transparent; color:var(--ink); border:1.5px solid var(--line); }
+    .mode-btn svg{ flex-shrink:0; }
+
+    /* subtitle styling */
+    ::cue{
+      font-size:.7em;
+      background:rgba(0,0,0,.6);
+      color:#fff;
+      padding:.1em .3em;
+      border-radius:3px;
+      line-height:1.4;
+    }
+
+    /* video overlay */
+    #video-overlay{
+      position:fixed; inset:0; z-index:8500; display:none;
+      background:rgba(5,10,16,.96); align-items:center; justify-content:center;
+      flex-direction:column;
+    }
+    #video-overlay.open{ display:flex; }
+    #video-overlay video{ max-width:95vw; max-height:88vh; border-radius:6px; box-shadow:0 20px 60px rgba(0,0,0,.7); }
+    #video-close{
+      position:absolute; top:1.2em; right:1.4em;
+      background:none; border:none; color:var(--muted); font-size:1.6em; cursor:pointer;
+      line-height:1; padding:.2em .4em; border-radius:4px;
+      transition:color .15s;
+    }
+    #video-close:hover{ color:#fff; }
+
     /* content lock screen */
     #content-lock{ position:fixed; inset:0; z-index:9000; display:none;
       background:linear-gradient(135deg,#0a1119 0%,#0e1a27 55%,#13101c 100%);
@@ -166,6 +206,12 @@
     </div>
   </div>
 </div>
+<div id="video-overlay">
+  <button id="video-close" aria-label="Close video">&#10005;</button>
+  <video id="video-player" controls preload="none" src="assets/video/LLNL_Presentation.mp4">
+    <track kind="subtitles" src="assets/subtitles/subtitles.vtt" srclang="en" label="English" default>
+  </video>
+</div>
 <div id="draft-banner"><span class="dot">&#9679;</span> <span id="draft-banner-text">WORK IN PROGRESS</span></div>
 <div class="reveal">
 <div class="slides">
@@ -185,6 +231,20 @@
     <p class="sub" style="font-size:.6em; color:var(--muted); letter-spacing:.04em; margin-top:.5em;">
       June 10, 2026
     </p>
+    <div class="mode-btns">
+      <button class="mode-btn primary" id="btn-video">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3 3.5A1.5 1.5 0 0 1 4.5 2h7A1.5 1.5 0 0 1 13 3.5v9A1.5 1.5 0 0 1 11.5 14h-7A1.5 1.5 0 0 1 3 12.5v-9zm4.5 1.25v6.5l4.5-3.25-4.5-3.25z"/></svg>
+        Watch Video
+      </button>
+      <button class="mode-btn secondary" id="btn-slides">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2.5A.5.5 0 0 1 2.5 2h11a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5H9v1h1.5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1H7v-1H2.5a.5.5 0 0 1-.5-.5v-9z"/></svg>
+        View Slides
+      </button>
+      <a class="mode-btn secondary" id="btn-pdf" href="assets/pdf/LLNL_AI_Solutions_Engineer_Presentation.pdf" download>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.5.5 0 0 1 .5.5v6.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 8.293V1.5A.5.5 0 0 1 8 1zM3 13a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 13z"/></svg>
+        Download PDF
+      </a>
+    </div>
   </div>
   <aside class="notes">
     Open with energy and calm. ~15s. Title card only — your bio is the next slide, so don't read credentials here.
@@ -658,7 +718,7 @@
     <p class="kicker" style="margin-bottom:1.2em;">Close</p>
     <p style="font-size:1.1em; color:#fff; line-height:1.5; font-style:italic;">
 The goal shouldn&rsquo;t be a working demo &mdash;
-      <b class="accent">it should be an LLM system the Lab can defend, audit, and trust at scale.</b>
+      <b class="accent">it should be an LLM system the organization can defend, audit, and trust at scale.</b>
     </p>
     <div style="width:48px; height:3px; background:var(--accent); border-radius:2px; margin:1.6em 0;"></div>
     <p class="sub" style="font-size:.72em; color:var(--muted);">Thank you. I&rsquo;d love to dig into any of these.</p>
@@ -666,7 +726,7 @@ The goal shouldn&rsquo;t be a working demo &mdash;
   <aside class="notes">
     ~45–60s. Don't claim a level — demonstrate it, then let them conclude. Mirror their four priorities back
     explicitly (deterministic / governance / evaluation / architecture) so the mapping is unmistakable.
-    Final line, slow and confident: "Not 'I can build a RAG pipeline' — but 'I can make an LLM system the Lab can
+    Final line, slow and confident: "Not 'I can build a RAG pipeline' — but 'I can make an LLM system the organization can
     defend, audit, and trust at scale,' and bring the org along to do it." Then open for questions.
   </aside>
 </section>
@@ -674,8 +734,8 @@ The goal shouldn&rsquo;t be a working demo &mdash;
 </div>
 </div>
 
-<script src="config.js"></script>
-<script src="config.local.js" onerror="void 0"></script>
+<script src="src/config.js"></script>
+<script src="src/config.local.js" onerror="void 0"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
@@ -772,6 +832,41 @@ The goal shouldn&rsquo;t be a working demo &mdash;
       }
     }
     banner.style.display = 'block';
+  })();
+
+  // Video overlay
+  (function(){
+    var overlay = document.getElementById('video-overlay');
+    var player  = document.getElementById('video-player');
+    var btnVideo  = document.getElementById('btn-video');
+    var btnSlides = document.getElementById('btn-slides');
+    var btnClose  = document.getElementById('video-close');
+    if(!overlay || !player) return;
+
+    function openVideo(){
+      overlay.classList.add('open');
+      Reveal.configure({ keyboard: false });
+      player.play();
+    }
+    function closeVideo(){
+      player.pause();
+      overlay.classList.remove('open');
+      Reveal.configure({ keyboard: true });
+    }
+
+    if(btnVideo)  btnVideo.addEventListener('click',  function(e){ e.stopPropagation(); openVideo(); });
+    if(btnSlides) btnSlides.addEventListener('click', function(e){ e.stopPropagation(); Reveal.next(); });
+    if(btnClose)  btnClose.addEventListener('click',  closeVideo);
+
+    // Escape key closes overlay
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape' && overlay.classList.contains('open')) closeVideo();
+    });
+
+    // Click outside video closes overlay
+    overlay.addEventListener('click', function(e){
+      if(e.target === overlay) closeVideo();
+    });
   })();
 </script>
 </body>

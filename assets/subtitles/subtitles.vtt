@@ -1,0 +1,625 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:05.920
+Thank you for taking the time. I want this to feel like a working session, not a one-way presentation.
+
+2
+00:00:05.920 --> 00:00:10.720
+So I'm going to walk you through how I think about building LLM systems and organization can
+
+3
+00:00:10.720 --> 00:00:16.400
+actually depend on. I'll cover the four areas you asked about, production rag architecture,
+
+4
+00:00:16.400 --> 00:00:22.880
+a real case study with hard numbers, my evaluation approach, and the tooling ecosystem I lean on.
+
+5
+00:00:22.880 --> 00:00:28.160
+I've left plenty of room for questions, so please stop me whenever something connects to a problem
+
+6
+00:00:28.160 --> 00:00:34.320
+you're working through. I'm Munshul Sharma, 13 years in production systems, Masters in software
+
+7
+00:00:34.320 --> 00:00:40.480
+engineering, author of rag in production, an inventor of the ILEI architecture for LLM's,
+
+8
+00:00:40.480 --> 00:00:46.960
+patent pending with the USBTO. Take away a trajectory, not a job list. Each phase built the lens I
+
+9
+00:00:46.960 --> 00:00:53.280
+bring to AI now. Distributed systems taught me to think about failure modes before the happy path.
+
+10
+00:00:53.360 --> 00:00:58.800
+Agentic systems taught me to contain non-determinism with contracts and fallbacks.
+
+11
+00:00:58.800 --> 00:01:05.360
+That framing transfers directly to language models. I don't see a model. I see a distributed system
+
+12
+00:01:05.360 --> 00:01:11.760
+with a probabilistic component in the critical path, and that changes every architectural decision.
+
+13
+00:01:11.760 --> 00:01:16.960
+My operating principle, treat the language model as the least reliable component,
+
+14
+00:01:16.960 --> 00:01:22.480
+and architect everything around containing and measuring that uncertainty. In an environment
+
+15
+00:01:22.480 --> 00:01:28.720
+where a confidently wrong answer has real cost, you need deterministic structure around a probabilistic
+
+16
+00:01:28.720 --> 00:01:35.280
+core. If you ask most people what a rag implementation looks like, this is it. Chunk your documents,
+
+17
+00:01:35.280 --> 00:01:41.360
+embed them, drop them in a vector database, retrieve top-k, hand the context to the model,
+
+18
+00:01:41.360 --> 00:01:47.360
+get an answer. And honestly, this is a reasonable way to prove a concept in an afternoon.
+
+19
+00:01:47.360 --> 00:01:53.280
+I've built this pipeline many times. It demos beautifully. The problem isn't that it's wrong.
+
+20
+00:01:53.280 --> 00:01:59.760
+It's what it quietly assumes. Clean documents, no access sensitive content, no need for exact
+
+21
+00:01:59.760 --> 00:02:05.520
+term matching, and that you'll know when the model gets something wrong. The moment it meets real data,
+
+22
+00:02:05.520 --> 00:02:12.400
+real users, and real consequences, it breaks in specific, predictable ways. Fixed chunking
+
+23
+00:02:12.400 --> 00:02:18.400
+splits documents at arbitrary boundaries. Tables get split midrow. Code blocks get split
+
+24
+00:02:18.400 --> 00:02:24.640
+mid-function. Conclusions get cut from the caveats that make them accurate. Pure vector search fails
+
+25
+00:02:24.640 --> 00:02:31.520
+silently on exact terms. Part numbers, regulatory identifiers, domain-specific acronyms.
+
+26
+00:02:31.520 --> 00:02:38.320
+Semantic similarity gets you to the neighborhood and misses the specific document. No access control
+
+27
+00:02:38.320 --> 00:02:43.440
+means the system's surfaces chunks the requesting user was never authorized to see.
+
+28
+00:02:43.440 --> 00:02:48.640
+In a national lab environment, that's not a compliance footnote. It's a mission critical
+
+29
+00:02:48.640 --> 00:02:55.760
+failure baked into the architecture. And without an evaluation harness, hallucinations ship silently.
+
+30
+00:02:55.760 --> 00:03:01.600
+The model generates fluent, confident pros. You have no automated signal on whether any of
+
+31
+00:03:01.600 --> 00:03:07.920
+it is grounded in what you retrieved. You find out when a user catches it, or worse, when they don't.
+
+32
+00:03:08.000 --> 00:03:12.640
+Every one of these is a production requirement the demo quietly ignored.
+
+33
+00:03:12.640 --> 00:03:18.800
+The most important architectural decision I make. I split it into three distinct planes and treat
+
+34
+00:03:18.800 --> 00:03:24.960
+each one as a first-class engineering concern. The knowledge plane is offline, governed,
+
+35
+00:03:24.960 --> 00:03:30.800
+versioned, and reproducible. It runs as a batch process, not on the request path.
+
+36
+00:03:30.880 --> 00:03:38.720
+Every chunk that exits this plane carries metadata, source, section, version, access control identity,
+
+37
+00:03:38.720 --> 00:03:45.600
+PI classification tags, and full lineage. That metadata isn't decoration. It's how every
+
+38
+00:03:45.600 --> 00:03:51.600
+downstream decision gets made correctly. The serving plane is online and latency sensitive.
+
+39
+00:03:51.600 --> 00:03:58.800
+A query comes in, gets classified by input guardrails, expands to an embedding, hits hybrid retrieval
+
+40
+00:03:58.800 --> 00:04:05.360
+with ACL filtering already applied, gets re-ranked, assembled into a context window,
+
+41
+00:04:05.360 --> 00:04:10.720
+passed to the model, then validated by output guardrails before anything goes out.
+
+42
+00:04:10.720 --> 00:04:17.280
+Every stage has a latency budget and a defined failure behavior. The control plane spans both.
+
+43
+00:04:17.280 --> 00:04:22.720
+It's the evaluation harness that gates deployment, end-to-end distributed tracing,
+
+44
+00:04:22.720 --> 00:04:27.920
+access governance with full audit logs, semantic caching, and cost controls.
+
+45
+00:04:27.920 --> 00:04:33.440
+Here's why this separation matters. The knowledge plane and the serving plane fail differently,
+
+46
+00:04:33.440 --> 00:04:38.720
+scale differently, and are owned by different people. The knowledge plane is about correctness
+
+47
+00:04:38.720 --> 00:04:45.440
+over time. It can be slow, it can be batch, it just needs to be right. The serving plane is about
+
+48
+00:04:45.440 --> 00:04:52.400
+latency and safety. Every request needs to be fast and auditable. Conflating them is the root
+
+49
+00:04:52.400 --> 00:04:58.240
+cause of most production rag failures I've seen. Notice governance isn't a step at the end.
+
+50
+00:04:58.240 --> 00:05:05.440
+Access control identity, PI tags, and lineage travel with every chunk from the moment of ingestion.
+
+51
+00:05:05.440 --> 00:05:11.600
+ACLs are enforced at retrieval time, not display time. By the time a chunk reaches the model,
+
+52
+00:05:11.600 --> 00:05:17.040
+the authorization decision has already been made. Now go back to those red failures.
+
+53
+00:05:17.040 --> 00:05:23.840
+Fixed chunking, pure vector search, no access control, no evaluation, no guardrails.
+
+54
+00:05:23.840 --> 00:05:30.720
+Every single one is now a named, testable, independently owned capability in this architecture.
+
+55
+00:05:30.720 --> 00:05:35.920
+That's the difference between a demo and a system the lab can defend. The biggest lever
+
+56
+00:05:35.920 --> 00:05:41.120
+on quality is not which model you choose. It's whether the right context gets in front of the
+
+57
+00:05:41.600 --> 00:05:47.120
+model in the first place. The model can only be as good as what you handed. Hybrid retrieval,
+
+58
+00:05:47.120 --> 00:05:54.560
+dense vectors combined with sparse BM25 is non-negotiable in technical and scientific domains.
+
+59
+00:05:54.560 --> 00:06:01.040
+Pure semantic search is powerful but fails silently on exact terms. A specific part number,
+
+60
+00:06:01.040 --> 00:06:06.480
+a regulatory standard identifier, a precise acronym, dense embeddings get the general
+
+61
+00:06:06.560 --> 00:06:14.080
+neighborhood and miss the specific document. BM25 catches exact tokens. You need both signals
+
+62
+00:06:14.080 --> 00:06:19.280
+and a fusion layer that knows how to combine them. Reranking is the second major lever.
+
+63
+00:06:19.280 --> 00:06:25.520
+You pull a candidate set, maybe 50 documents, then run a cross encoder to Rescore relevance
+
+64
+00:06:25.520 --> 00:06:31.840
+against the actual query. Cross encoders are slower, but that joint comparison of query against
+
+65
+00:06:31.840 --> 00:06:36.640
+candidate produces dramatically better ordering. I've repeatedly seen re-ranking
+
+66
+00:06:36.640 --> 00:06:42.480
+produce larger quality improvements than switching to a more capable and more expensive model.
+
+67
+00:06:42.480 --> 00:06:47.200
+It's one of the highest return on investment changes you can make to a deployed system.
+
+68
+00:06:47.200 --> 00:06:52.800
+Structure-aware chunking is the third. Tables, code blocks, and conclusions with their
+
+69
+00:06:52.800 --> 00:06:58.640
+supporting caveats need to stay whole. If a results table gets split across two chunks,
+
+70
+00:06:58.640 --> 00:07:03.600
+neither is useful in isolation. I use document type specific chunkers,
+
+71
+00:07:03.600 --> 00:07:08.560
+and for heterogeneous sources, custom parsers rather than a generic text splitter.
+
+72
+00:07:08.560 --> 00:07:14.480
+On evaluation, I measure retrieval and generation completely separately because they fail for
+
+73
+00:07:14.480 --> 00:07:20.480
+completely different reasons. For retrieval, I track context precision and recall.
+
+74
+00:07:20.480 --> 00:07:24.880
+Did we retrieve the right evidence? Did we miss anything critical?
+
+75
+00:07:24.960 --> 00:07:30.160
+For generation, I track faithfulness. Is every claim grounded in what we retrieved
+
+76
+00:07:30.160 --> 00:07:36.320
+and answer relevance? The eval said is built with domain experts, not auto-generated.
+
+77
+00:07:36.320 --> 00:07:41.680
+It runs on every code change. Deployments are gated on it like a test suite.
+
+78
+00:07:41.680 --> 00:07:47.440
+If we can't measure it, we don't ship it. A fluent, confident, unsupported answer is the
+
+79
+00:07:47.440 --> 00:07:52.480
+most dangerous output a RAG system can produce. I'd rather the systems say,
+
+80
+00:07:52.480 --> 00:07:57.440
+I don't have enough information than hallucinate. In a high-stakes environment,
+
+81
+00:07:57.440 --> 00:08:03.440
+that refusal is a feature. Overconfidence is the failure mode that destroys long-term trust.
+
+82
+00:08:04.000 --> 00:08:08.080
+My most recent enterprise project was a knowledge assistant that unified
+
+83
+00:08:08.080 --> 00:08:14.000
+three systems engineers were losing hours across every day. A confluence Docs wiki,
+
+84
+00:08:14.000 --> 00:08:18.800
+public Slack channels, and JIRA, one interface to query everything.
+
+85
+00:08:18.800 --> 00:08:24.240
+The engineering was not simple. The hardest part wasn't the LLM. It was that each source
+
+86
+00:08:24.240 --> 00:08:30.320
+breaks differently and required a completely separate ingestion strategy. The wiki goes stale.
+
+87
+00:08:30.320 --> 00:08:36.240
+Documents from three years ago sit alongside documents from last week with no signal about
+
+88
+00:08:36.240 --> 00:08:43.120
+which is canonical. I addressed this with recency decay waiting and canonical URL deduplication,
+
+89
+00:08:43.120 --> 00:08:49.280
+so the most recently updated version always wins. Slack is conversational with no inherent
+
+90
+00:08:49.280 --> 00:08:56.000
+ground truth. A thread might span 40 messages with the answer buried in message 32. I rebuilt
+
+91
+00:08:56.000 --> 00:09:01.600
+threads as coherent units, extracted question and answer pairs were detectable, and applied a
+
+92
+00:09:01.600 --> 00:09:08.320
+hard filter. Public channels only, enforced at ingestion time, not at query time. The access
+
+93
+00:09:08.320 --> 00:09:14.640
+control decision for slack had to be made during ingest. It was the only safe and variant. JIRA
+
+94
+00:09:14.640 --> 00:09:20.240
+is half structured fields and half freeform comment chains. The resolution comment often
+
+95
+00:09:20.240 --> 00:09:26.320
+contains the actual answer. The ticket title is the category. I built field-aware parsers that
+
+96
+00:09:26.320 --> 00:09:32.080
+weight resolve tickets higher and maintain link graph relationships between related issues.
+
+97
+00:09:32.160 --> 00:09:38.560
+All three normalize into one unified access controlled versioned index. Here's the whole
+
+98
+00:09:38.560 --> 00:09:45.360
+system into end. Three ingestion lanes, each with its own parsing logic converging into a
+
+99
+00:09:45.360 --> 00:09:51.600
+single version knowledge plane. Every chunk carries its access control identity from the moment it's
+
+100
+00:09:51.600 --> 00:09:57.920
+written. The serving plane starts with identity resolution. Every request maps to an authenticated
+
+101
+00:09:57.920 --> 00:10:05.200
+user via OIDC, then to group memberships, then to what's retrievable. That ACL filter runs at
+
+102
+00:10:05.200 --> 00:10:12.160
+the vector store query level. Unauthorized chunks are never retrieved, never ranked, never assembled.
+
+103
+00:10:12.160 --> 00:10:17.920
+The data never reaches the model in the first place. Input guardrails scope the query,
+
+104
+00:10:17.920 --> 00:10:26.720
+check for injection patterns, flag PI. Hybrid retrieval runs BM25 plus dense KNN, ACL filtered.
+
+105
+00:10:26.720 --> 00:10:33.280
+The cross encoder re-ranker scores the top candidates. The LLM generates a grounded response.
+
+106
+00:10:33.280 --> 00:10:39.440
+An LLM as judge scores groundedness before the answer leaves the system. Low faithfulness means
+
+107
+00:10:39.440 --> 00:10:46.160
+refuse or regenerate, not pass through. The control plane gates everything. The evaluation
+
+108
+00:10:46.160 --> 00:10:52.560
+harness as a deployment gate, open telemetry tracing on every span, governance logs, and
+
+109
+00:10:52.560 --> 00:10:58.640
+thumbs up, thumbs down feedback feeding continuously back into the eval set. Nothing ships without
+
+110
+00:10:58.640 --> 00:11:04.640
+passing the eval gate. Here's what it delivered in production. Median time to answer dropped by 80%.
+
+111
+00:11:05.600 --> 00:11:11.520
+Engineers who used to spend 15 minutes hunting across three systems were getting answers in under
+
+112
+00:11:11.520 --> 00:11:18.800
+90 seconds. Across the org that compounded to over 30,000 hours saved year over year. Faithfulness on
+
+113
+00:11:18.880 --> 00:11:26.800
+our evaluation set held above 0.92. Engineers went from three interfaces to one. What I learned,
+
+114
+00:11:26.800 --> 00:11:32.960
+per source ingestion strategy matters more than the LLM choice. The model was almost a commodity
+
+115
+00:11:32.960 --> 00:11:39.040
+decision. The engineering value was in the ingestion design, the chunking, the retrieval,
+
+116
+00:11:39.040 --> 00:11:44.480
+and the evaluation harness. Every meaningful quality improvement came from retrieval and
+
+117
+00:11:44.480 --> 00:11:51.040
+chunking changes, not model upgrades. Hybrid retrieval plus re-ranking beat a model upgrade
+
+118
+00:11:51.040 --> 00:11:56.960
+every time we ran the comparison. An eval harness built with subject matter experts was the only
+
+119
+00:11:56.960 --> 00:12:02.640
+way we could ship with confidence. The domain experts caught failure modes our engineering team
+
+120
+00:12:02.640 --> 00:12:08.160
+never would have thought to write test cases for. The trade off I made consciously and would make
+
+121
+00:12:08.160 --> 00:12:14.720
+again precision over coverage. Refuse over guess when retrieval confidence is low. More,
+
+122
+00:12:14.720 --> 00:12:20.720
+I don't have enough information responses in the early rollout. One confident wrong answer in the
+
+123
+00:12:20.720 --> 00:12:27.680
+first two weeks destroys trust that takes months to rebuild. High recall is a long term goal. High
+
+124
+00:12:27.680 --> 00:12:33.120
+precision from day one is how you earn the right to expand scope. The part I'm proudest of isn't
+
+125
+00:12:33.200 --> 00:12:39.200
+the architecture. It's that I got security, data owners, legal, and subject matter experts
+
+126
+00:12:39.200 --> 00:12:45.200
+aligned on access policy before we wrote a line of production code. The evaluation gate moved the
+
+127
+00:12:45.200 --> 00:12:52.240
+team from it looks good to me to measured, auditable, and defensible. I'm opinionated about tooling,
+
+128
+00:12:52.240 --> 00:12:59.120
+but loyal to capabilities, not vendors. On orchestration, Langchain and LAMA index are excellent for
+
+129
+00:12:59.200 --> 00:13:05.520
+prototyping. You get to a working demo in hours. In production, I keep a thin custom layer on the
+
+130
+00:13:05.520 --> 00:13:12.560
+critical path, retrieval, assembly, guardrails, so I can instrument it, test it, and swap components
+
+131
+00:13:12.560 --> 00:13:18.320
+without untangling of frameworks abstractions. The framework is a scaffold, not a permanent
+
+132
+00:13:18.320 --> 00:13:24.960
+dependency. On models, I evaluate on capability per dollar, latency, and whether the model can
+
+133
+00:13:24.960 --> 00:13:30.960
+operate inside the security boundary. In a national lab environment, that last criterion
+
+134
+00:13:30.960 --> 00:13:36.720
+often dominates every other. Open weight models like LAMA and Mistral earn their place not
+
+135
+00:13:36.720 --> 00:13:42.000
+primarily because they're cheaper, they're often not, once you factor in infrastructure,
+
+136
+00:13:42.000 --> 00:13:48.800
+but because they can run inside the air gap. Frontier models like CLOD and GPT for a best-in-class
+
+137
+00:13:48.800 --> 00:13:54.240
+for complex reasoning, but they require data to leave the security perimeter. You need a clear
+
+138
+00:13:54.240 --> 00:14:00.000
+policy on which workload classifications can use which model tier. On vector stores,
+
+139
+00:14:00.000 --> 00:14:05.440
+put vector for teams already on Postgres who want minimal operational overhead,
+
+140
+00:14:05.440 --> 00:14:12.160
+Milvis or Kdrant at scale with complex filtering, Azure AI search for native hybrid retrieval
+
+141
+00:14:12.160 --> 00:14:18.640
+in enterprise Azure environments. The decision is almost never about raw performance. It's about
+
+142
+00:14:18.640 --> 00:14:24.560
+ACL metadata filtering support and what your infrastructure team can operate it to in the morning.
+
+143
+00:14:24.560 --> 00:14:29.760
+On evaluation, ROGA style metrics for retrieval and generation separately,
+
+144
+00:14:29.760 --> 00:14:36.480
+custom harnesses for domain-specific cases, LLM as judge calibrated against human expert labels.
+
+145
+00:14:36.480 --> 00:14:41.840
+The tooling matters less than the process. The eval set must be built with people who know
+
+146
+00:14:41.840 --> 00:14:48.240
+what correct looks like. On observability, I won't ship an LLM system without self-hosted
+
+147
+00:14:48.240 --> 00:14:55.120
+length use wired to open telemetry. Every retrieval, every model call, every guardrail decision
+
+148
+00:14:55.120 --> 00:15:00.880
+needs to be traceable end-to-end. Cost attribution and latency profiling need to be
+
+149
+00:15:00.880 --> 00:15:06.400
+on by default. In a deterministic outcomes environment, I won't hand reliability to a
+
+150
+00:15:06.400 --> 00:15:13.680
+system I can't trace, test or explain. Let me pull this together. The goal of any LLM system
+
+151
+00:15:13.680 --> 00:15:19.600
+in a mission critical environment shouldn't be can we build a working demo. It should be,
+
+152
+00:15:19.600 --> 00:15:25.920
+can we build something the organization can defend, audit and trust at scale? Can we measure it?
+
+153
+00:15:25.920 --> 00:15:29.760
+Can we explain why it's right? Can we improve it without guessing?
+
+154
+00:15:29.760 --> 00:15:34.960
+Every decision I've walked you through, the three-plane architecture, hybrid retrieval with
+
+155
+00:15:34.960 --> 00:15:40.960
+re-ranking, evaluation as a deployment gate, ACL enforcement at retrieval time.
+
+156
+00:15:40.960 --> 00:15:43.600
+Those aren't complexity for its own sake.

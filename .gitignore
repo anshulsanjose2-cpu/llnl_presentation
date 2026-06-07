@@ -1,2 +1,13 @@
-config.local.js
+src/config.local.js
 *.aiff
+
+# Generated build artifacts
+node_modules/
+assets/slides/clips/
+assets/slides/images/
+build/
+assets/audio/sample_andrew.mp3
+assets/audio/sample_christopher.mp3
+content/LLNL_Speech_andrew.vtt
+package-lock.json
+.venv-whisper/

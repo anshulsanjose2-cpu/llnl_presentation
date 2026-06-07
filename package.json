@@ -1,5 +1,15 @@
 {
+  "scripts": {
+    "build": "./build.sh",
+    "serve": "python3 -m http.server 8765 --bind 127.0.0.1",
+    "video": "python3 scripts/make_video.py",
+    "video:close": "python3 scripts/rebuild_close.py",
+    "video:sync": "python3 scripts/sync_video.py",
+    "pdf": "node scripts/build_pdf.js",
+    "subtitles": ".venv-whisper/bin/python scripts/generate_subtitles.py"
+  },
   "devDependencies": {
+    "pdfkit": "^0.19.0",
     "playwright": "^1.60.0"
   }
 }
