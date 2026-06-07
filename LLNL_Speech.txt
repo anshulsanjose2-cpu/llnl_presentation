@@ -1,77 +1,129 @@
-Thank you for the time. I'm going to walk you through how I think about building LLM systems an organization can actually depend on — covering the four areas you asked about. I'll leave plenty of room for questions.
+Thank you for taking the time. I want this to feel like a working session, not a one-way presentation — so I'm going to walk you through how I think about building LLM systems an organization can actually depend on. I'll cover the four areas you asked about: production rag architecture, a real case study with hard numbers, my evaluation approach, and the tooling ecosystem I lean on. I've left plenty of room for questions, so please stop me whenever something connects to a problem you're working through.
 
 [SLIDE 1 — Introduction]
 
-I'm Anshul Sharma. I have a master's in software engineering and thirteen years building production systems — starting in distributed systems, then large-scale productivity applications, then agentic systems, and now RAG and GenAI architecture. I wrote RAG in Production, and I'm the inventor of the ILEI Architecture, which is patent-pending with the USPTO.
+I'm Anshul Sharma — thirteen years in production systems, master's in software engineering, author of rag in Production, and inventor of the ILEI Architecture for LLMs, patent-pending with the USPTO.
 
-Take away from this slide a trajectory, not a job list. I came to AI from distributed systems — so I don't see a model, I see a distributed system with a probabilistic component in the critical path. That framing changes every architectural decision.
+Take away a trajectory, not a job list. Each phase built the lens I bring to AI now. Distributed systems taught me to think about failure modes before the happy path. Agentic systems taught me to contain non-determinism with contracts and fallbacks.
 
-My operating principle: I treat the language model as the least reliable component in the system, and I architect everything around containing and measuring that uncertainty.
+That framing transfers directly to language models. I don't see a model — I see a distributed system with a probabilistic component in the critical path. And that changes every architectural decision.
 
-At this stage of my career I lead less by writing code and more by setting architecture, defining what "good" means in measurable terms, and getting data owners, security, and domain experts aligned before we build. In an environment where a confidently wrong answer has real cost, that discipline is the whole game.
+My operating principle: treat the language model as the least reliable component, and architect everything around containing and measuring that uncertainty. In an environment where a confidently wrong answer has real cost, you need deterministic structure around a probabilistic core.
 
-[SLIDE 2a — The naive RAG]
+[SLIDE 2a — The naive rag]
 
-If you ask most people what a RAG implementation is, this is it: chunk your documents, embed them, drop them in a vector database, retrieve top-k, hand it to the model. And honestly, this is a perfectly fine way to prove the concept in an afternoon — I've built this, it demos beautifully.
+If you ask most people what a rag implementation looks like, this is it: chunk your documents, embed them, drop them in a vector database, retrieve top-k, hand the context to the model, get an answer. And honestly — this is a reasonable way to prove a concept in an afternoon. I've built this pipeline many times. It demos beautifully.
 
-But the moment it meets real data, real users, and real consequences, it breaks in specific, predictable ways. Fixed chunking splits documents at arbitrary boundaries — tables mid-row, code mid-block, conclusions cut from their caveats. Pure vector search fails silently on exact terms — part numbers, acronyms. No access control means the system retrieves chunks the user isn't cleared to see. And with no evaluation harness, hallucinations ship silently.
+The problem isn't that it's wrong. It's what it quietly assumes: clean documents, no access-sensitive content, no need for exact-term matching, and that you'll know when the model gets something wrong. The moment it meets real data, real users, and real consequences, it breaks in specific, predictable ways.
 
-Every one of these is a production requirement the demo quietly ignored. So let me show you how I actually build it.
+Fixed chunking splits documents at arbitrary boundaries. Tables get split mid-row. Code blocks get split mid-function. Conclusions get cut from the caveats that make them accurate.
+
+Pure vector search fails silently on exact terms — part numbers, regulatory identifiers, domain-specific acronyms. Semantic similarity gets you to the neighborhood and misses the specific document.
+
+No access control means the system surfaces chunks the requesting user was never authorized to see. In a national lab environment, that's not a compliance footnote — it's a mission-critical failure baked into the architecture.
+
+And without an evaluation harness, hallucinations ship silently. The model generates fluent, confident prose. You have no automated signal on whether any of it is grounded in what you retrieved. You find out when a user catches it — or worse, when they don't.
+
+Every one of these is a production requirement the demo quietly ignored.
 
 [SLIDE 2b — Three planes, not one pipeline]
 
-The most important architectural decision I make: I split it into three planes.
+The most important architectural decision I make: I split it into three distinct planes and treat each one as a first-class engineering concern.
 
-An offline Knowledge Plane — governed, versioned, reproducible. An online Serving Plane that's about latency and validation. And a Control Plane that spans both. The first two fail differently, scale differently, and are owned by different people. Conflating them is the root cause of most production RAG problems.
+The Knowledge Plane is offline, governed, versioned, and reproducible. It runs as a batch process, not on the request path. Every chunk that exits this plane carries metadata: source, section, version, access-control identity, PII classification tags, and full lineage. That metadata isn't decoration — it's how every downstream decision gets made correctly.
 
-Notice governance isn't a step at the end. Access-control identity, PII tags, and lineage travel with each chunk from the moment of ingestion — and ACLs are enforced at retrieval time. By the time you're at the LLM, a data leak has already happened.
+The Serving Plane is online and latency-sensitive. A query comes in, gets classified by input guardrails, expands to an embedding, hits hybrid retrieval with ACL filtering already applied, gets re-ranked, assembled into a context window, passed to the model, then validated by output guardrails before anything goes out. Every stage has a latency budget and a defined failure behavior.
 
-The Control Plane cuts across both: an evaluation harness that gates deployment, end-to-end tracing, access and governance with full audit, and caching and cost controls.
+The Control Plane spans both. It's the evaluation harness that gates deployment, end-to-end distributed tracing, access governance with full audit logs, semantic caching, and cost controls.
 
-Now look at the red failures from a moment ago — fixed chunking, pure vector search, no access control, no evaluation, no guardrails. Every single one is now a named capability in this architecture. That's the difference between a demo and a system the Lab can defend.
+Here's why this separation matters: the Knowledge Plane and the Serving Plane fail differently, scale differently, and are owned by different people. The Knowledge Plane is about correctness over time — it can be slow, it can be batch, it just needs to be right. The Serving Plane is about latency and safety — every request needs to be fast and auditable. Conflating them is the root cause of most production rag failures I've seen.
+
+Notice governance isn't a step at the end. Access-control identity, PII tags, and lineage travel with every chunk from the moment of ingestion. ACLs are enforced at retrieval time, not display time. By the time a chunk reaches the model, the authorization decision has already been made.
+
+Now go back to those red failures — fixed chunking, pure vector search, no access control, no evaluation, no guardrails. Every single one is now a named, testable, independently owned capability in this architecture. That's the difference between a demo and a system the Lab can defend.
 
 [SLIDE 3 — Retrieval is the system]
 
-The biggest lever on quality is not which model — it's whether the right context is in front of it.
+The biggest lever on quality is not which model you choose — it's whether the right context gets in front of the model in the first place. The model can only be as good as what you hand it.
 
-That means hybrid retrieval: dense vectors plus sparse BM25, because pure semantic search quietly fails on exact terms — part numbers, acronyms — the precise tokens that matter in technical and scientific domains. Then re-ranking to fix ordering — consistently beats upgrading to a bigger model. And structure-aware chunking so tables, code blocks, and conclusions stay whole.
+Hybrid retrieval — dense vectors combined with sparse BM25 — is non-negotiable in technical and scientific domains. Pure semantic search is powerful but fails silently on exact terms. A specific part number, a regulatory standard identifier, a precise acronym — dense embeddings get the general neighborhood and miss the specific document. BM25 catches exact tokens. You need both signals and a fusion layer that knows how to combine them.
 
-I've repeatedly seen better chunking and re-ranking beat a more expensive model. So when a system hallucinates, my first question is never "upgrade the model" — it's "show me the retrieved context."
+Re-ranking is the second major lever. You pull a candidate set — maybe fifty documents — then run a cross-encoder to rescore relevance against the actual query. Cross-encoders are slower, but that joint comparison of query against candidate produces dramatically better ordering. I've repeatedly seen re-ranking produce larger quality improvements than switching to a more capable and more expensive model. It's one of the highest return-on-investment changes you can make to a deployed system.
 
-On evaluation: I measure retrieval and generation separately. Context precision and recall on retrieval — right evidence in, noise out. Faithfulness on generation — every claim grounded in retrieved context. I build the eval set with domain experts, run it on every change, and gate deployments on it like a test suite. If we can't measure it, we don't ship it.
+Structure-aware chunking is the third. Tables, code blocks, and conclusions with their supporting caveats need to stay whole. If a results table gets split across two chunks, neither is useful in isolation. I use document-type-specific chunkers — and for heterogeneous sources, custom parsers rather than a generic text splitter.
 
-A fluent, confident, unsupported answer is the most dangerous output a RAG system can produce. I'd rather it say "I don't have enough information" than guess — refusal is a feature, not a failure.
+On evaluation: I measure retrieval and generation completely separately because they fail for completely different reasons. For retrieval I track context precision and recall — did we retrieve the right evidence, did we miss anything critical. For generation I track faithfulness — is every claim grounded in what we retrieved — and answer relevance.
+
+The eval set is built with domain experts, not auto-generated. It runs on every code change. Deployments are gated on it like a test suite. If we can't measure it, we don't ship it.
+
+A fluent, confident, unsupported answer is the most dangerous output a rag system can produce. I'd rather the system say "I don't have enough information" than hallucinate. In a high-stakes environment, that refusal is a feature. Overconfidence is the failure mode that destroys long-term trust.
 
 [SLIDE 4a — Case study: the three-source challenge]
 
-My most recent enterprise project was a knowledge assistant that unified three systems engineers were losing hours across — a docs wiki, public Slack channels, and Jira. The hardest part wasn't the LLM — it was that each source breaks differently.
+My most recent enterprise project was a knowledge assistant that unified three systems engineers were losing hours across every day — a Confluence docs wiki, public Slack channels, and Jira. One interface to query everything. The engineering was not simple.
 
-Wiki goes stale — recency decay and canonical URL dedup. Slack is conversational with no ground truth — thread reconstruction, Q and A extraction, and critically, public-only access control at ingestion. Jira is half structured fields, half freeform comments — field-aware parsing, weight resolved answers. They normalize into one unified, access-controlled index.
+The hardest part wasn't the LLM — it was that each source breaks differently and required a completely separate ingestion strategy.
+
+The wiki goes stale. Documents from three years ago sit alongside documents from last week with no signal about which is canonical. I addressed this with recency decay weighting and canonical URL deduplication so the most recently updated version always wins.
+
+Slack is conversational with no inherent ground truth. A thread might span forty messages with the answer buried in message thirty-two. I rebuilt threads as coherent units, extracted question-and-answer pairs where detectable, and applied a hard filter: public channels only, enforced at ingestion time, not at query time. The access control decision for Slack had to be made during ingest — it was the only safe invariant.
+
+Jira is half structured fields and half freeform comment chains. The resolution comment often contains the actual answer. The ticket title is the category. I built field-aware parsers that weight resolved tickets higher and maintain link-graph relationships between related issues.
+
+All three normalize into one unified, access-controlled, versioned index.
 
 [SLIDE 4b — Production architecture]
 
-Here's the whole system. Three ingestion lanes converging into one normalized, versioned knowledge plane. The serving plane enforces identity-to-ACL on every request, runs input and output guardrails on both ends, hybrid retrieval with cross-encoder re-ranking, and an LLM-as-judge scoring groundedness before the answer goes out. Low score — refuse or regenerate. The control plane ties it together: domain-expert-built evaluation as a deployment gate, OpenTelemetry tracing, governance and audit, and a feedback loop that enriches the eval set. Nothing ships without passing the eval gate.
+Here's the whole system end to end.
+
+Three ingestion lanes, each with its own parsing logic, converging into a single versioned knowledge plane. Every chunk carries its access-control identity from the moment it's written.
+
+The serving plane starts with identity resolution. Every request maps to an authenticated user via OIDC, then to group memberships, then to what's retrievable. That ACL filter runs at the vector store query level — unauthorized chunks are never retrieved, never ranked, never assembled. The data never reaches the model in the first place.
+
+Input guardrails scope the query, check for injection patterns, flag PII. Hybrid retrieval runs BM25 plus dense kNN, ACL-filtered. The cross-encoder re-ranker scores the top candidates. The LLM generates a grounded response. An LLM-as-judge scores groundedness before the answer leaves the system — low faithfulness means refuse or regenerate, not pass through.
+
+The control plane gates everything: the evaluation harness as a deployment gate, OpenTelemetry tracing on every span, governance logs, and thumbs-up thumbs-down feedback feeding continuously back into the eval set.
+
+Nothing ships without passing the eval gate.
 
 [SLIDE 4c — Impact and learnings]
 
-Impact: we cut median search time by eighty percent. Across the engineering org that added up to over thirty thousand hours saved year over year. Faithfulness held above 0.92 on our eval set. And engineers went from searching three systems to asking one.
+Here's what it delivered in production.
 
-What I learned: per-source ingestion strategy matters more than the LLM choice — each source breaks differently. Hybrid retrieval and re-ranking beat upgrading the model every time. And an eval harness built with domain experts is the only way to ship with confidence.
+Median time-to-answer dropped by eighty percent. Engineers who used to spend fifteen minutes hunting across three systems were getting answers in under ninety seconds. Across the org that compounded to over thirty thousand hours saved year over year. Faithfulness on our evaluation set held above 0.92. Engineers went from three interfaces to one.
 
-The conscious tradeoff: I tuned for precision over coverage — refuse over guess — because in an early rollout, one confident wrong answer destroys trust faster than ten honest "I don't knows."
+What I learned: per-source ingestion strategy matters more than the LLM choice. The model was almost a commodity decision — the engineering value was in the ingestion design, the chunking, the retrieval, and the evaluation harness. Every meaningful quality improvement came from retrieval and chunking changes, not model upgrades. Hybrid retrieval plus re-ranking beat a model upgrade every time we ran the comparison.
 
-The part I'm proudest of isn't the stack — I got security, data owners, and subject matter experts aligned on access policy before we wrote a line of code. And the evaluation gate moved the team from "looks good to me" to measured.
+An eval harness built with subject-matter experts was the only way we could ship with confidence. The domain experts caught failure modes our engineering team never would have thought to write test cases for.
+
+The tradeoff I made consciously and would make again: precision over coverage. Refuse over guess when retrieval confidence is low. More "I don't have enough information" responses in the early rollout. One confident wrong answer in the first two weeks destroys trust that takes months to rebuild. High recall is a long-term goal. High precision from day one is how you earn the right to expand scope.
+
+The part I'm proudest of isn't the architecture. It's that I got security, data owners, legal, and subject-matter experts aligned on access policy before we wrote a line of production code. The evaluation gate moved the team from "it looks good to me" to measured, auditable, and defensible.
 
 [SLIDE 5 — Tooling ecosystem]
 
-I'm opinionated, but loyal to capabilities, not vendors. Frameworks like LangChain and LlamaIndex to move fast, but in production I keep a thin custom layer on the critical path so I can trace and test it.
+I'm opinionated about tooling, but loyal to capabilities, not vendors.
 
-On models: I weigh capability per dollar and latency — and critically, whether it can run inside the security boundary. That's where open-weight models like Llama or Mistral earn their place alongside frontier models like Claude and GPT. On stores: pgvector through Milvus or Qdrant depending on scale, Azure AI Search for hybrid in enterprise environments. Evaluation tooling — RAGAS-style metrics and custom harnesses — has to gate CI. Guardrails: Llama Guard and Presidio for input classification and PII detection; citation enforcement on every output. Observability: self-hosted Langfuse plus OpenTelemetry so every span is traceable and every token cost is accounted for.
+On orchestration: LangChain and LlamaIndex are excellent for prototyping — you get to a working demo in hours. In production I keep a thin custom layer on the critical path — retrieval, assembly, guardrails — so I can instrument it, test it, and swap components without untangling a framework's abstractions. The framework is a scaffold, not a permanent dependency.
 
-In a deterministic-outcomes environment, I won't hand reliability to a black box I can't trace or test.
+On models: I evaluate on capability per dollar, latency, and whether the model can operate inside the security boundary. In a national lab environment, that last criterion often dominates every other. Open-weight models like Llama and Mistral earn their place not primarily because they're cheaper — they're often not, once you factor in infrastructure — but because they can run inside the air gap. Frontier models like Claude and GPT-4 are best-in-class for complex reasoning, but they require data to leave the security perimeter. You need a clear policy on which workload classifications can use which model tier.
+
+On vector stores: pgvector for teams already on Postgres who want minimal operational overhead. Milvus or Qdrant at scale with complex filtering. Azure AI Search for native hybrid retrieval in enterprise Azure environments. The decision is almost never about raw performance — it's about ACL metadata filtering support and what your infrastructure team can operate at two in the morning.
+
+On evaluation: RAGAS-style metrics for retrieval and generation separately, custom harnesses for domain-specific cases, LLM-as-judge calibrated against human expert labels. The tooling matters less than the process — the eval set must be built with people who know what correct looks like.
+
+On observability: I won't ship an LLM system without self-hosted Langfuse wired to OpenTelemetry. Every retrieval, every model call, every guardrail decision needs to be traceable end to end. Cost attribution and latency profiling need to be on by default.
+
+In a deterministic-outcomes environment, I won't hand reliability to a system I can't trace, test, or explain.
 
 [SLIDE 6 — Close]
 
-The goal shouldn't be a working demo — it should be an LLM system the Lab can defend, audit, and trust at scale.
+Let me pull this together.
 
-That's the bar I build to. Thank you. I'd love to dig into any of these.
+The goal of any LLM system in a mission-critical environment shouldn't be "can we build a working demo." It should be: can we build something the organization can defend, audit, and trust at scale. Can we measure it. Can we explain why it's right. Can we improve it without guessing.
+
+Every decision I've walked you through — the three-plane architecture, hybrid retrieval with re-ranking, evaluation as a deployment gate, ACL enforcement at retrieval time — those aren't complexity for its own sake. They're what separates a system that survives production from one that looks good in a controlled demo and breaks under real conditions.
+
+That's the bar I build to. And it's the bar I think this environment requires.
+
+Thank you. I'd love to dig into any of this — especially anything that maps to a challenge you're currently working through.
