@@ -3,6 +3,12 @@
 Internal reference for building, editing, and rebuilding the deck, video, PDF, and subtitles.
 This is a Reveal.js slide deck (`index.html`) plus a generated video, PDF, and subtitle track.
 
+**Production URL:** https://anshulsanjose2-cpu.github.io/llnl_presentation/
+Hosted on GitHub Pages from the `main` branch (repo `anshulsanjose2-cpu/llnl_presentation`).
+Pushing to `main` deploys automatically — give Pages a minute, then hard-reload. Because it's
+served over HTTPS, the video overlay and subtitles work in production (subtitles need HTTP(S),
+not `file://`).
+
 ---
 
 ## Project layout
@@ -105,10 +111,21 @@ It extracts the audio from `assets/video/LLNL_Presentation.mp4` and transcribes 
 The title slide has three buttons: **Watch Video** (opens a fullscreen overlay playing `assets/video/LLNL_Presentation.mp4` with subtitles on by default), **View Slides** (advances into the normal deck), and **Download PDF** (an `<a download>` to `assets/pdf/...pdf`). Overlay closes via the × button, Escape, or clicking outside. While open, Reveal keyboard nav is disabled. Relevant IDs in `index.html`: `#video-overlay`, `#video-player`, `#btn-video`, `#btn-slides`, `#btn-pdf`, `#video-close`. Subtitle size is controlled by the `::cue` CSS rule (currently `font-size:.7em`).
 
 ## Content lock & draft banner
-Both controlled by `config.js`:
+Both controlled by `src/config.js`:
 - **Content lock** (`contentLock`): hides the deck behind a countdown until `showAtUTC`. Set `enabled:false` to disable. Times are **UTC** (`...Z`). Go-live: 2026-06-10 16:00 UTC = 9:00 AM Pacific.
 - **Draft banner** (`draftBanner`): "WORK IN PROGRESS" badge; auto-hides at `hideAtUTC`.
 Headless capture/export disables both via `addInitScript` so the deck renders.
+
+### Quickly flip the flags (and deploy)
+`scripts/toggle_flags.sh` flips `enabled: true <-> false` and commits + pushes to `main`
+(which redeploys GitHub Pages). "Go live" = set both to false.
+```bash
+./scripts/toggle_flags.sh            # flip BOTH flags, commit, push   (or: npm run toggle)
+./scripts/toggle_flags.sh lock       # flip only contentLock.enabled
+./scripts/toggle_flags.sh banner     # flip only draftBanner.enabled
+./scripts/toggle_flags.sh --dry-run  # preview the change, write nothing
+./scripts/toggle_flags.sh --no-push  # commit but don't push
+```
 
 ## Key durations / specs
 - Slide size / video resolution: **1280×960**.
