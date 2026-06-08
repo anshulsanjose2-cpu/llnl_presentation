@@ -39,11 +39,12 @@ done
 
 # Flip the requested flag(s) in-place via python, and report old->new per flag.
 SUMMARY="$(TARGET="$TARGET" DRY_RUN="$DRY_RUN" CONFIG="$CONFIG" python3 - <<'PY'
-import os, re, sys
+import os, re, sys, json
 
 path   = os.environ["CONFIG"]
 target = os.environ["TARGET"]
 dry    = os.environ["DRY_RUN"] == "1"
+flag_json = os.path.join(os.path.dirname(os.path.dirname(path)), "flag.json")
 
 with open(path) as f:
     src = f.read()
@@ -72,6 +73,13 @@ changes.append(f"Content lock is now {state}")
 if not dry:
     with open(path, "w") as f:
         f.write(src)
+    # Keep flag.json (the static read-only API endpoint) in sync with config.js.
+    sm = re.search(r"showAtUTC\s*:\s*[\"']([^\"']*)[\"']", src)
+    flag = {"contentLock": {"enabled": new == "true",
+                            "showAtUTC": sm.group(1) if sm else None}}
+    with open(flag_json, "w") as f:
+        json.dump(flag, f, indent=2)
+        f.write("\n")
 
 # Two blocks separated by a blank line: display lines, then commit lines.
 print("\n".join(changes))
@@ -91,7 +99,7 @@ if [[ "$DRY_RUN" -eq 1 ]]; then
 fi
 
 cd "$ROOT"
-git add "$CONFIG"
+git add "$CONFIG" "$ROOT/flag.json"
 
 # Build a concise commit message from the technical summary lines (unchanged format).
 MSG="Toggle config flags: $(echo "$COMMIT_LINES" | paste -sd '; ' -)"
