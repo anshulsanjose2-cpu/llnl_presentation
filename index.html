@@ -28,16 +28,6 @@
     .reveal section{ text-align:left; padding:0 0 8px 0; box-sizing:border-box; outline:none;}
     .reveal .slide-number{ font-size:14px; color:var(--muted);}
 
-    /* draft banner — auto-removed at 6:00 AM Pacific on Wed Jun 10, 2026 (13:00 UTC) */
-    #draft-banner{ display:none; position:fixed; top:0; left:0; right:0; z-index:2000;
-      background:linear-gradient(90deg,#ef5350,#ffb74d); color:#1a1206;
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
-      font-size:13px; font-weight:700; letter-spacing:.06em; text-align:center;
-      padding:6px 12px; box-shadow:0 1px 8px rgba(0,0,0,.45); pointer-events:none; }
-    #draft-banner .dot{ color:#7a1f1f; }
-    #draft-banner span.lite{ font-weight:500; letter-spacing:.02em; }
-    @media print{ #draft-banner{ display:none !important; } }
-
     .kicker{ color:var(--accent); font-size:.5em; letter-spacing:.18em; text-transform:uppercase; margin:0 0 .25em 0; font-weight:600;}
     .sub{ color:var(--muted); font-size:.6em; line-height:1.35;}
     .reveal ul{ margin-left:1.0em; margin-bottom:.2em;}
@@ -212,7 +202,6 @@
     <track kind="subtitles" src="assets/subtitles/subtitles.vtt" srclang="en" label="English" default>
   </video>
 </div>
-<div id="draft-banner"><span class="dot">&#9679;</span> <span id="draft-banner-text">WORK IN PROGRESS</span></div>
 <div class="reveal">
 <div class="slides">
 
@@ -813,25 +802,6 @@ The goal shouldn&rsquo;t be a working demo &mdash;
     }
     tick();
     var timer = setInterval(tick, 1000);
-  })();
-
-  // Draft banner — configured in config.js (enabled / text / hideAtUTC).
-  (function(){
-    var cfg = (window.PRESENTATION_CONFIG && window.PRESENTATION_CONFIG.draftBanner) || {};
-    var banner = document.getElementById('draft-banner');
-    if(!banner) return;
-    if(!cfg.enabled){ banner.remove(); return; }
-    var label = document.getElementById('draft-banner-text');
-    if(label && cfg.text != null) label.textContent = cfg.text;
-    if(cfg.hideAtUTC){
-      var cutoff = Date.parse(cfg.hideAtUTC);
-      if(!isNaN(cutoff)){
-        if(Date.now() >= cutoff){ banner.remove(); return; }
-        var ms = cutoff - Date.now();
-        if(ms <= 2147483647){ setTimeout(function(){ banner.remove(); }, ms); } // live-remove if left open past cutoff
-      }
-    }
-    banner.style.display = 'block';
   })();
 
   // Video overlay

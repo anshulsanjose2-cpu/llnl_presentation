@@ -13,8 +13,7 @@ async function exportPDF(port, outputPath) {
   // Disable content lock so the deck renders in headless mode
   await page.addInitScript(() => {
     window.PRESENTATION_CONFIG = {
-      contentLock: { enabled: false },
-      draftBanner: { enabled: false }
+      contentLock: { enabled: false }
     };
   });
 

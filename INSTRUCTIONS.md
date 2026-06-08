@@ -22,7 +22,7 @@ web entry point); everything else is grouped by role. **All commands run from th
 ├── INSTRUCTIONS.md       This file.
 ├── package.json          npm deps (playwright, pdfkit).
 ├── src/                  Page config (loaded by index.html via <script src="src/...">)
-│   ├── config.js           Runtime config: content lock (countdown) + draft banner.
+│   ├── config.js           Runtime config: content lock (countdown).
 │   └── config.local.js     Local-dev overrides for config.js (gitignored, optional).
 ├── assets/               All media (served to the browser)
 │   ├── video/    LLNL_Presentation.mp4                       Final video (~15:43, 1280×960).
@@ -110,19 +110,16 @@ It extracts the audio from `assets/video/LLNL_Presentation.mp4` and transcribes 
 ## Video overlay (title slide)
 The title slide has three buttons: **Watch Video** (opens a fullscreen overlay playing `assets/video/LLNL_Presentation.mp4` with subtitles on by default), **View Slides** (advances into the normal deck), and **Download PDF** (an `<a download>` to `assets/pdf/...pdf`). Overlay closes via the × button, Escape, or clicking outside. While open, Reveal keyboard nav is disabled. Relevant IDs in `index.html`: `#video-overlay`, `#video-player`, `#btn-video`, `#btn-slides`, `#btn-pdf`, `#video-close`. Subtitle size is controlled by the `::cue` CSS rule (currently `font-size:.7em`).
 
-## Content lock & draft banner
-Both controlled by `src/config.js`:
+## Content lock
+Controlled by `src/config.js`:
 - **Content lock** (`contentLock`): hides the deck behind a countdown until `showAtUTC`. Set `enabled:false` to disable. Times are **UTC** (`...Z`). Go-live: 2026-06-10 16:00 UTC = 9:00 AM Pacific.
-- **Draft banner** (`draftBanner`): "WORK IN PROGRESS" badge; auto-hides at `hideAtUTC`.
-Headless capture/export disables both via `addInitScript` so the deck renders.
+Headless capture/export disables it via `addInitScript` so the deck renders.
 
-### Quickly flip the flags (and deploy)
-`scripts/toggle_flags.sh` flips `enabled: true <-> false` and commits + pushes to `main`
-(which redeploys GitHub Pages). "Go live" = set both to false.
+### Quickly flip the flag (and deploy)
+`scripts/toggle_flags.sh` flips `contentLock.enabled: true <-> false` and commits + pushes to `main`
+(which redeploys GitHub Pages). "Go live" = set it to false.
 ```bash
-./scripts/toggle_flags.sh            # flip BOTH flags, commit, push   (or: npm run toggle)
-./scripts/toggle_flags.sh lock       # flip only contentLock.enabled
-./scripts/toggle_flags.sh banner     # flip only draftBanner.enabled
+./scripts/toggle_flags.sh            # flip contentLock.enabled, commit, push   (or: npm run toggle)
 ./scripts/toggle_flags.sh --dry-run  # preview the change, write nothing
 ./scripts/toggle_flags.sh --no-push  # commit but don't push
 ```

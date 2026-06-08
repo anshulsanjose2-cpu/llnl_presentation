@@ -1,41 +1,36 @@
 #!/usr/bin/env bash
 #
-# toggle_flags.sh — flip the boolean flags in src/config.js, then commit & push.
+# toggle_flags.sh — flip the content-lock flag in src/config.js, then commit & push.
 #
-# Flips `enabled: true` <-> `enabled: false` for the content lock and/or draft banner,
+# Flips `enabled: true` <-> `enabled: false` for the content lock,
 # then commits the change to main and pushes (the repo is the live GitHub Pages site).
 #
 #   contentLock.enabled  — hides the deck behind a countdown until showAtUTC
-#   draftBanner.enabled  — shows the "WORK IN PROGRESS" badge
 #
 # Usage:
-#   ./scripts/toggle_flags.sh             # flip BOTH flags
-#   ./scripts/toggle_flags.sh lock        # flip only contentLock.enabled
-#   ./scripts/toggle_flags.sh banner      # flip only draftBanner.enabled
-#   ./scripts/toggle_flags.sh all         # flip both (same as no arg)
+#   ./scripts/toggle_flags.sh             # flip contentLock.enabled
 #
 # Options:
 #   --dry-run     show the change but don't write, commit, or push
 #   --no-push     commit but don't push
 #   -h, --help    this help
 #
-# "Go live" = both flags false (deck visible, no WIP badge).
+# "Go live" = flag false (deck visible).
 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONFIG="$ROOT/src/config.js"
 
-TARGET="all"
+TARGET="lock"
 DRY_RUN=0
 NO_PUSH=0
 
 for arg in "$@"; do
   case "$arg" in
-    lock|banner|all) TARGET="$arg" ;;
     --dry-run)       DRY_RUN=1 ;;
     --no-push)       NO_PUSH=1 ;;
-    -h|--help)       sed -n '2,33p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help)       sed -n '2,29p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "Unknown argument: $arg" >&2; exit 2 ;;
   esac
 done
@@ -53,36 +48,26 @@ dry    = os.environ["DRY_RUN"] == "1"
 with open(path) as f:
     src = f.read()
 
-# Map friendly name -> the JS block key whose `enabled:` we flip.
-blocks = {"lock": "contentLock", "banner": "draftBanner"}
-targets = ["lock", "banner"] if target == "all" else [target]
-
 changes = []   # plain-English lines shown on screen
 commit = []    # technical lines used for the commit message
-for name in targets:
-    key = blocks[name]
-    # Find `<key>: {` then the first `enabled: true|false` after it.
-    m = re.search(re.escape(key) + r"\s*:\s*\{", src)
-    if not m:
-        sys.stderr.write(f"could not find block '{key}' in config\n"); sys.exit(1)
-    sub = re.compile(r"(enabled\s*:\s*)(true|false)")
-    fm = sub.search(src, m.end())
-    if not fm:
-        sys.stderr.write(f"could not find 'enabled' in block '{key}'\n"); sys.exit(1)
-    old = fm.group(2)
-    new = "false" if old == "true" else "true"
-    src = src[:fm.start()] + fm.group(1) + new + src[fm.end():]
-    commit.append(f"{key}.enabled: {old} -> {new}")
 
-    # Plain-English description of what this flag now does.
-    label = {"contentLock": "Content lock", "draftBanner": "Draft banner"}[key]
-    if key == "contentLock":
-        state = "ON  — deck is hidden behind the countdown" if new == "true" \
-                else "OFF — deck is visible to everyone"
-    else:
-        state = 'ON  — "WORK IN PROGRESS" badge is showing' if new == "true" \
-                else "OFF — no badge"
-    changes.append(f"{label} is now {state}")
+key = "contentLock"
+# Find `<key>: {` then the first `enabled: true|false` after it.
+m = re.search(re.escape(key) + r"\s*:\s*\{", src)
+if not m:
+    sys.stderr.write(f"could not find block '{key}' in config\n"); sys.exit(1)
+sub = re.compile(r"(enabled\s*:\s*)(true|false)")
+fm = sub.search(src, m.end())
+if not fm:
+    sys.stderr.write(f"could not find 'enabled' in block '{key}'\n"); sys.exit(1)
+old = fm.group(2)
+new = "false" if old == "true" else "true"
+src = src[:fm.start()] + fm.group(1) + new + src[fm.end():]
+commit.append(f"{key}.enabled: {old} -> {new}")
+
+state = "ON  — deck is hidden behind the countdown" if new == "true" \
+        else "OFF — deck is visible to everyone"
+changes.append(f"Content lock is now {state}")
 
 if not dry:
     with open(path, "w") as f:
