@@ -57,7 +57,8 @@ with open(path) as f:
 blocks = {"lock": "contentLock", "banner": "draftBanner"}
 targets = ["lock", "banner"] if target == "all" else [target]
 
-changes = []
+changes = []   # plain-English lines shown on screen
+commit = []    # technical lines used for the commit message
 for name in targets:
     key = blocks[name]
     # Find `<key>: {` then the first `enabled: true|false` after it.
@@ -71,17 +72,33 @@ for name in targets:
     old = fm.group(2)
     new = "false" if old == "true" else "true"
     src = src[:fm.start()] + fm.group(1) + new + src[fm.end():]
-    changes.append(f"{key}.enabled: {old} -> {new}")
+    commit.append(f"{key}.enabled: {old} -> {new}")
+
+    # Plain-English description of what this flag now does.
+    label = {"contentLock": "Content lock", "draftBanner": "Draft banner"}[key]
+    if key == "contentLock":
+        state = "ON  — deck is hidden behind the countdown" if new == "true" \
+                else "OFF — deck is visible to everyone"
+    else:
+        state = 'ON  — "WORK IN PROGRESS" badge is showing' if new == "true" \
+                else "OFF — no badge"
+    changes.append(f"{label} is now {state}")
 
 if not dry:
     with open(path, "w") as f:
         f.write(src)
 
+# Two blocks separated by a blank line: display lines, then commit lines.
 print("\n".join(changes))
+print()
+print("\n".join(commit))
 PY
 )"
 
-echo "$SUMMARY" | sed 's/^/  /'
+DISPLAY="$(printf '%s' "$SUMMARY" | sed '/^$/q' | sed '/^$/d')"
+COMMIT_LINES="$(printf '%s' "$SUMMARY" | sed '1,/^$/d')"
+
+echo "$DISPLAY" | sed 's/^/  /'
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
   echo "(dry run — no changes written)"
@@ -91,8 +108,8 @@ fi
 cd "$ROOT"
 git add "$CONFIG"
 
-# Build a concise commit message from the summary lines.
-MSG="Toggle config flags: $(echo "$SUMMARY" | paste -sd '; ' -)"
+# Build a concise commit message from the technical summary lines (unchanged format).
+MSG="Toggle config flags: $(echo "$COMMIT_LINES" | paste -sd '; ' -)"
 git commit -q -m "$MSG" -m "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 echo "committed: $MSG"
 
